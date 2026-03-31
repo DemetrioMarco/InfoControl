@@ -1,0 +1,59 @@
+.role-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.role-admin {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.role-operador,
+.role-operator {
+  background-color: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.role-super_admin {
+  background-color: #f3e8ff;
+  color: #a855f7;
+  border: 1px solid #e9d5ff;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  background-color: #d1d5db;
+  border-radius: 11px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active {
+  background-color: #10b981;
+}
+
+.toggle-switch.active::after {
+  left: 20px;
+}

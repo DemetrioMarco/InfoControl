@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # ═════════════════════════════════════════════
+  #              PostgreSQL 15
+  # ═════════════════════════════════════════════
+  postgres:
+    image: postgres:15-alpine
+    container_name: mss_postgres
+    environment:
+      POSTGRES_DB: mss_sfs_db
+      POSTGRES_USER: mss_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mss_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mss_network
+    mem_limit: 1g
+    cpus: "1"
+
+  # ═════════════════════════════════════════════
+  #          Spring Boot API (Backend)
+  # ═════════════════════════════════════════════
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - JAVA_VERSION=21
+    container_name: mss_api
+    environment:
+      # 🔗 Conexión a PostgreSQL
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mss_sfs_db
+      SPRING_DATASOURCE_USERNAME: mss_user
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+
+      # 🧠 JPA / Hibernate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+
+      # ⚙️ App
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8080
+
+      # 🔐 JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 86400000
+
+      # 🌐 CORS
+      CORS_ALLOWED_ORIGINS: "http://localhost:4200"
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mss_network
+    mem_limit: 2g
+    cpus: "2"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ═════════════════════════════════════════════
+  #              Angular Frontend
+  # ═════════════════════════════════════════════
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=20
+    container_name: mss_frontend
+    environment:
+      # ⚠️ IMPORTANTE: usar nombre del servicio backend
+      - API_URL=http://backend:8080
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    networks:
+      - mss_network
+    mem_limit: 1g
+    cpus: "1"
+
+# ═════════════════════════════════════════════
+#               NETWORK
+# ═════════════════════════════════════════════
+networks:
+  mss_network:
+    driver: bridge
+
+# ═════════════════════════════════════════════
+#               VOLUMES
+# ═════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local

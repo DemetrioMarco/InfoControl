@@ -1,0 +1,185 @@
+<!-- user-form.component.html -->
+@if (isOpen) {
+  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
+
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        
+        <!-- Header -->
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title">{{ isEditMode ? 'Edit User' : 'Create New User' }}</h5>
+          <button 
+            type="button" 
+            class="btn-close" 
+            (click)="closeModal()"
+            [disabled]="isSubmitting">
+          </button>
+        </div>
+
+        <!-- Body -->
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+          
+          <!-- Error Message -->
+          @if (errorMessage) {
+            <div class="alert alert-danger alert-dismissible fade show mb-3">
+              {{ errorMessage }}
+              <button type="button" class="btn-close" (click)="errorMessage = null"></button>
+            </div>
+          }
+
+          <!-- Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Full Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              formControlName="nombre"
+              [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
+              placeholder="Enter full name">
+            <div class="invalid-feedback d-block" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
+              Name is required (min. 3 characters)
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email *</label>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              formControlName="email"
+              [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+              placeholder="Enter email">
+            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['required'] && form.get('email')?.touched">
+              Email is required
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['email'] && form.get('email')?.touched">
+              Invalid email format
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['emailTaken'] && form.get('email')?.touched">
+              This email is already registered
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label">
+              Password {{ !isEditMode ? '*' : '(optional)' }}
+            </label>
+            <div class="input-group">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                class="form-control"
+                id="password"
+                formControlName="password"
+                [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+                [placeholder]="isEditMode ? 'Leave empty to keep current password' : 'Min. 8 characters, 1 uppercase, 1 number'">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="togglePasswordVisibility()"
+                [disabled]="isSubmitting">
+                <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            
+            <!-- Password Strength -->
+            @if (form.get('password')?.value) {
+              <div class="mt-2">
+                <small class="d-block mb-1">Strength:</small>
+                <div class="progress" style="height: 4px;">
+                  <div 
+                    class="progress-bar"
+                    [class]="'bg-' + getPasswordStrength()"
+                    [style.width]="getPasswordStrength() === 'weak' ? '33%' : getPasswordStrength() === 'medium' ? '66%' : '100%'">
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="invalid-feedback d-block" *ngIf="form.get('password')?.errors?.['minlength'] && form.get('password')?.touched">
+              Password must be at least 8 characters
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="form.get('password')?.errors?.['weakPassword'] && form.get('password')?.touched">
+              Password must contain 1 uppercase letter and 1 number
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          @if (form.get('password')?.value) {
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirm Password *</label>
+              <div class="input-group">
+                <input
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  class="form-control"
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  [class.is-invalid]="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
+                  placeholder="Confirm password">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  [disabled]="isSubmitting">
+                  <span class="material-icons">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="form.errors?.['passwordMismatch'] && form.get('confirmPassword')?.touched">
+                Passwords do not match
+              </div>
+            </div>
+          }
+
+          <!-- Role -->
+          <div class="mb-3">
+            <label for="rol" class="form-label">Role *</label>
+            <select
+              class="form-select"
+              id="rol"
+              formControlName="rol">
+              @for (role of roles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Enabled -->
+          <div class="mb-0 form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="enabled"
+              formControlName="enabled">
+            <label class="form-check-label" for="enabled">
+              Enable user
+            </label>
+          </div>
+
+        </form>
+
+        <!-- Footer -->
+        <div class="modal-footer border-top">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="onSubmit()"
+            [disabled]="form.invalid || isSubmitting">
+            {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update User' : 'Create User') }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
