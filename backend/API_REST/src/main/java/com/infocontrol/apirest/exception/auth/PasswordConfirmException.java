@@ -1,4 +1,4 @@
-package com.infocontrol.apirest.exception;
+package com.infocontrol.apirest.exception.auth;
 
 public class PasswordConfirmException extends RuntimeException {
     public PasswordConfirmException() {

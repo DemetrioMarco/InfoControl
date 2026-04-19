@@ -1,4 +1,4 @@
-package com.infocontrol.apirest.exception;
+package com.infocontrol.apirest.exception.auth;
 
 public class PasswordMismatchException extends RuntimeException {
     public PasswordMismatchException() {

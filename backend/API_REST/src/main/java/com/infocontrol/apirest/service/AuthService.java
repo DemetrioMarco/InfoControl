@@ -7,10 +7,10 @@ import com.infocontrol.apirest.dto.request.RegisterRequest;
 import com.infocontrol.apirest.dto.response.AuthResponse;
 import com.infocontrol.apirest.entity.Role;
 import com.infocontrol.apirest.entity.Usuario;
-import com.infocontrol.apirest.exception.EmailAlreadyExistsException;
-import com.infocontrol.apirest.exception.InvalidCredentialsException;
-import com.infocontrol.apirest.exception.InvalidRefreshTokenException;
-import com.infocontrol.apirest.exception.UserNotFoundException;
+import com.infocontrol.apirest.exception.auth.InvalidCredentialsException;
+import com.infocontrol.apirest.exception.auth.InvalidRefreshTokenException;
+import com.infocontrol.apirest.exception.base.DuplicateResourceException;
+import com.infocontrol.apirest.exception.base.ResourceNotFoundException;
 import com.infocontrol.apirest.mapper.UserMapper;
 import com.infocontrol.apirest.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,10 +24,10 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthResponse register (RegisterRequest request){
+    public AuthResponse register(RegisterRequest request) {
 
-        if(repo.existsByEmail(request.email())){
-            throw new EmailAlreadyExistsException();
+        if (repo.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("Email ya registrado: " + request.email());
         }
 
         Usuario user = new Usuario();
@@ -41,34 +41,25 @@ public class AuthService {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                UserMapper.toResponse(user)
-        );
+        return new AuthResponse(accessToken, refreshToken, UserMapper.toResponse(user));
     }
 
-    public AuthResponse login(LoginRequest request){
+    public AuthResponse login(LoginRequest request) {
 
         Usuario user = repo.findByEmail(request.email())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if(!passwordEncoder.matches(request.password(), user.getPassword())){
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new InvalidCredentialsException();
-
         }
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                UserMapper.toResponse(user)
-        );
+        return new AuthResponse(accessToken, refreshToken, UserMapper.toResponse(user));
     }
 
-    public AuthResponse refresh(RefreshRequest request){
+    public AuthResponse refresh(RefreshRequest request) {
 
         String email;
 
@@ -78,12 +69,12 @@ public class AuthService {
             throw new InvalidRefreshTokenException();
         }
 
-        if(email == null) throw new InvalidRefreshTokenException();
+        if (email == null) throw new InvalidRefreshTokenException();
 
         Usuario user = repo.findByEmail(email)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        if(!jwtService.isTokenValid(request.refreshToken(), user)){
+        if (!jwtService.isTokenValid(request.refreshToken(), user)) {
             throw new InvalidRefreshTokenException();
         }
 
@@ -91,5 +82,4 @@ public class AuthService {
 
         return new AuthResponse(newAccess, request.refreshToken(), UserMapper.toResponse(user));
     }
-
 }

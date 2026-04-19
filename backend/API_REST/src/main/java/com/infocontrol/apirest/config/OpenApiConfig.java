@@ -18,14 +18,14 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API REST - MSS-SFS+")
+                        .title("API REST - InfoControl")
                         .version("1.0.0")
-                        .description("Documentación oficial de la API de MSS-SFS+. " +
+                        .description("Documentación oficial de la API de InfoControl. " +
                                 "Para endpoints protegidos, obtenga el token en /auth/login.")
                         .contact(new Contact()
-                                .name("SaferFS Support")
-                                .email("admin@saferfs.mx")
-                                .url("https://saferfs.com.mx")
+                                .name("Marco Demetrio")
+                                .email("marco.demetrio@gmail.com")
+                                .url("https://mdemetrio.com")
                         )
                 )
                 .components(new Components()

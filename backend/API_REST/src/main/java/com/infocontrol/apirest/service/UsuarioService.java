@@ -7,10 +7,10 @@ import com.infocontrol.apirest.dto.request.UsuarioUpdateRequest;
 import com.infocontrol.apirest.dto.response.UserResponse;
 import com.infocontrol.apirest.entity.Role;
 import com.infocontrol.apirest.entity.Usuario;
-import com.infocontrol.apirest.exception.EmailAlreadyExistsException;
-import com.infocontrol.apirest.exception.PasswordConfirmException;
-import com.infocontrol.apirest.exception.PasswordMismatchException;
-import com.infocontrol.apirest.exception.UserNotFoundException;
+import com.infocontrol.apirest.exception.auth.PasswordConfirmException;
+import com.infocontrol.apirest.exception.auth.PasswordMismatchException;
+import com.infocontrol.apirest.exception.base.DuplicateResourceException;
+import com.infocontrol.apirest.exception.base.ResourceNotFoundException;
 import com.infocontrol.apirest.mapper.UserMapper;
 import com.infocontrol.apirest.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,7 +30,7 @@ public class UsuarioService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String email){
+    public UserDetails loadUserByUsername(String email) {
         Usuario user = repo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
@@ -53,13 +53,13 @@ public class UsuarioService implements UserDetailsService {
     public UserResponse buscarPorId(Long id) {
         return repo.findById(id)
                 .map(UserMapper::toResponse)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
     @Transactional
     public UserResponse crear(UsuarioRequest request) {
         if (repo.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException();
+            throw new DuplicateResourceException("Email ya registrado: " + request.email());
         }
 
         Usuario user = new Usuario();
@@ -74,12 +74,11 @@ public class UsuarioService implements UserDetailsService {
     @Transactional
     public UserResponse actualizar(Long id, UsuarioUpdateRequest request) {
         Usuario user = repo.findById(id)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        // Validar email único solo si cambió
         boolean emailCambio = !user.getEmail().equalsIgnoreCase(request.email());
         if (emailCambio && repo.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException();
+            throw new DuplicateResourceException("Email ya registrado: " + request.email());
         }
 
         user.setNombre(request.nombre());
@@ -93,7 +92,7 @@ public class UsuarioService implements UserDetailsService {
     @Transactional
     public void eliminar(Long id) {
         if (!repo.existsById(id)) {
-            throw new UserNotFoundException();
+            throw new ResourceNotFoundException("Usuario no encontrado con id: " + id);
         }
         repo.deleteById(id);
     }
@@ -101,14 +100,12 @@ public class UsuarioService implements UserDetailsService {
     @Transactional
     public void cambiarPassword(Long id, ChangePasswordRequest request) {
         Usuario user = repo.findById(id)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        // 1. Verificar que la contraseña actual es correcta
         if (!passwordEncoder.matches(request.passwordActual(), user.getPassword())) {
             throw new PasswordMismatchException();
         }
 
-        // 2. Verificar que nueva contraseña y confirmación coinciden
         if (!request.passwordNuevo().equals(request.passwordConfirm())) {
             throw new PasswordConfirmException();
         }
@@ -116,5 +113,4 @@ public class UsuarioService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.passwordNuevo()));
         repo.save(user);
     }
-
 }
