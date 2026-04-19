@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, LoginRequest, User } from '../models/auth-response.model';
+import { environment } from '../../../environment/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  private readonly apiUrl = 'http://localhost:8080';
+  private readonly apiUrl = environment.apiUrl;
   private readonly ACCESS_TOKEN_KEY = 'accessToken';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'auth_user';
