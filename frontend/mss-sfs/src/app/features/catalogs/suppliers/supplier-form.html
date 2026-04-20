@@ -1,0 +1,84 @@
+@if (isOpen) {
+<div class="modal-backdrop fade show" (click)="closeModal()"></div>
+<div class="modal fade show d-block" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold text-primary">{{ editingSupplier ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body p-4">
+        <div class="row g-3">
+          <!-- Identificación -->
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">RUT</label>
+            <input type="text" class="form-control form-control-sm" formControlName="rut">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label fw-bold small">Razón Social *</label>
+            <input type="text" class="form-control form-control-sm" formControlName="razonSocial">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small">Nombre Fantasía</label>
+            <input type="text" class="form-control form-control-sm" formControlName="nombreFantasia">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small">Giro</label>
+            <input type="text" class="form-control form-control-sm" formControlName="giro">
+          </div>
+
+          <!-- Contacto -->
+          <div class="col-12 mt-3"><h6 class="border-bottom pb-1 text-secondary small fw-bold">CONTACTO</h6></div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Nombre Contacto</label>
+            <input type="text" class="form-control form-control-sm" formControlName="contactoNombre">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Teléfono</label>
+            <input type="text" class="form-control form-control-sm" formControlName="contactoTelefono">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Email</label>
+            <input type="email" class="form-control form-control-sm" formControlName="contactoEmail">
+          </div>
+
+          <!-- Ubicación -->
+          <div class="col-12 mt-3"><h6 class="border-bottom pb-1 text-secondary small fw-bold">UBICACIÓN</h6></div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small">Dirección</label>
+            <input type="text" class="form-control form-control-sm" formControlName="direccion">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold small">Comuna</label>
+            <input type="text" class="form-control form-control-sm" formControlName="comuna">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold small">Ciudad</label>
+            <input type="text" class="form-control form-control-sm" formControlName="ciudad">
+          </div>
+          
+          <div class="col-md-12">
+            <label class="form-label fw-bold small">Observaciones</label>
+            <textarea class="form-control form-control-sm" formControlName="observaciones" rows="2"></textarea>
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" formControlName="activo" id="checkA">
+              <label class="form-check-label small" for="checkA">Proveedor Activo</label>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-sm btn-secondary px-4" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-sm btn-primary px-4" (click)="onSubmit()" [disabled]="form.invalid || isSubmitting()">
+          {{ isSubmitting() ? 'Guardando...' : 'Guardar Proveedor' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

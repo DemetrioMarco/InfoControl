@@ -1,0 +1,4 @@
+:host { display: block; }
+.form-check-input { cursor: pointer; }
+.form-check-input:checked { background-color: #198754; border-color: #198754; }
+.table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.02); }

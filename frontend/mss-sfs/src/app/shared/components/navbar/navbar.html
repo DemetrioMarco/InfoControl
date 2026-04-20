@@ -1,42 +1,56 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+<!-- BARRA SUPERIOR (Fija arriba) -->
+<nav class="navbar navbar-dark bg-dark px-3 fixed-top shadow-sm" style="height: 56px;">
   <a class="navbar-brand fw-bold" routerLink="/app/dashboard">Info</a>
 
-  <button
-    class="navbar-toggler"
-    type="button"
-    data-bs-toggle="collapse"
-    data-bs-target="#mainNav"
-    aria-controls="mainNav"
-    aria-expanded="false"
-    aria-label="Toggle navigation"
-  >
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="mainNav">
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      @if (hasRole(Role.SUPER_ADMIN, Role.ADMIN)) {
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/app/dashboard" routerLinkActive="active">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/app/users" routerLinkActive="active">Usuarios</a>
-        </li>
-      }
-    </ul>
-
-    <ul class="navbar-nav ms-auto align-items-center gap-2">
-      <li class="nav-item">
-        <span class="navbar-text text-light">
-          {{ user?.nombre }} &mdash;
-          <span class="badge bg-secondary">{{ user?.rol }}</span>
-        </span>
-      </li>
-      <li class="nav-item">
-        <button class="btn btn-outline-light btn-sm" (click)="logout()">
-          Cerrar sesión
-        </button>
-      </li>
-    </ul>
+  <div class="d-flex align-items-center gap-3 ms-auto">
+    <span class="navbar-text text-light d-none d-md-inline">
+      {{ user?.nombre }} <span class="badge bg-secondary ms-1">{{ user?.rol }}</span>
+    </span>
+    <button class="btn btn-outline-light btn-sm" (click)="logout()">
+      Cerrar sesión
+    </button>
   </div>
 </nav>
+
+<!-- MENÚ LATERAL (Fijo a la izquierda, debajo de la barra superior) -->
+<aside class="bg-light border-end fixed-top" style="top: 56px; bottom: 0; width: 250px; overflow-y: auto;">
+  <div class="p-3">
+    @if (hasRole(Role.SUPER_ADMIN, Role.ADMIN)) {
+      <ul class="nav nav-pills flex-column gap-1">
+        <li class="nav-item">
+          <a class="nav-link text-dark" routerLink="/app/dashboard" routerLinkActive="active bg-primary text-white">
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" routerLink="/app/users" routerLinkActive="active bg-primary text-white">
+            Usuarios
+          </a>
+        </li>
+
+        <!-- Sección Catálogos -->
+        <li class="nav-item mt-2">
+          <a class="nav-link text-dark fw-bold d-flex justify-content-between align-items-center" 
+             data-bs-toggle="collapse" 
+             href="#collapseCatalogs" 
+             role="button" 
+             aria-expanded="true">
+            <span>Catálogos</span>
+            <small>▼</small>
+          </a>
+          <!-- 'show' lo mantiene abierto por defecto -->
+          <div class="collapse show" id="collapseCatalogs">
+            <ul class="nav nav-pills flex-column ms-3 mt-1 gap-1">
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/suppliers" routerLinkActive="active bg-primary text-white">Proveedores</a></li>
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/categorias" routerLinkActive="active bg-primary text-white">Categorías</a></li>
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/subcategorias" routerLinkActive="active bg-primary text-white">Subcategorías</a></li>
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/tipo-ubicacion" routerLinkActive="active bg-primary text-white">Tipos de Ubicación</a></li>
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/ubicaciones" routerLinkActive="active bg-primary text-white">Ubicaciones</a></li>
+              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/unidades-medida" routerLinkActive="active bg-primary text-white">Unid. de Medida</a></li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    }
+  </div>
+</aside>

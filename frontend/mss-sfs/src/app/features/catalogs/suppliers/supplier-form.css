@@ -1,0 +1,36 @@
+/* Fondo oscuro detrás del modal */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
+}
+
+/* Posicionamiento del modal */
+.modal.show.d-block {
+  z-index: 1055;
+  display: block;
+  background: none;
+}
+
+/* Ajustes de diseño interno */
+.modal-content {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.form-label {
+  margin-bottom: 2px;
+  color: #4b5563;
+}
+
+/* Scroll interno si la pantalla es muy pequeña */
+.modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Estilo para los divisores de sección (Contacto, Ubicación) */
+h6.border-bottom {
+  letter-spacing: 0.05em;
+  margin-top: 1rem;
+}

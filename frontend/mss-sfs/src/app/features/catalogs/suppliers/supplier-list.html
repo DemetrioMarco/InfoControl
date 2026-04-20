@@ -1,0 +1,87 @@
+<div class="card shadow-sm border-0">
+  <!-- Header -->
+  <div class="card-body border-bottom d-flex justify-content-between align-items-center py-3">
+    <div>
+      <h5 class="mb-0 text-primary fw-bold">Proveedores</h5>
+      <small class="text-muted">Administración de proveedores y contactos</small>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <div class="input-group" style="max-width: 300px;">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" class="form-control border-start-0 ps-0 form-control-sm"
+          placeholder="Buscar por RUT o Razón Social..." [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)">
+      </div>
+      <button class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3" (click)="openModal()">
+        <i class="bi bi-plus-lg"></i> Nuevo Proveedor
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Content -->
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light text-uppercase x-small fw-bold">
+        <tr>
+          <th class="ps-4">RUT / Razón Social</th>
+          <th>Giro</th>
+          <th>Contacto</th>
+          <th>Ubicación</th>
+          <th class="text-center">Estado</th>
+          <th class="text-end pe-4">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="small">
+        @for (item of filteredSuppliers(); track item.id) {
+        <tr>
+          <td class="ps-4">
+            <div class="fw-bold text-dark">{{ item.razonSocial }}</div>
+            <div class="text-muted small">{{ item.rut || 'Sin RUT' }}</div>
+          </td>
+          <td>{{ item.giro || '---' }}</td>
+          <td>
+            <div class="d-flex flex-column">
+              <span class="fw-medium">{{ item.contactoNombre || 'N/A' }}</span>
+              <span class="text-muted x-small">{{ item.contactoEmail }}</span>
+            </div>
+          </td>
+          <td>
+            <div>{{ item.ciudad }}</div>
+            <div class="text-muted x-small">{{ item.comuna }}</div>
+          </td>
+          <td class="text-center">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input" type="checkbox" [checked]="item.activo" (change)="toggleActive(item)">
+            </div>
+          </td>
+          <td class="text-end pe-4">
+            <div class="btn-group">
+              <button class="btn btn-sm btn-outline-secondary" (click)="openModal(item)" title="Editar">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteSupplier(item.id)" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>
+            No se encontraron proveedores.
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- Modal de Formulario (Componente aparte) -->
+<app-supplier-form [isOpen]="isModalOpen()" [editingSupplier]="editingSupplier()" (close)="isModalOpen.set(false)"
+  (saved)="loadSuppliers()" />

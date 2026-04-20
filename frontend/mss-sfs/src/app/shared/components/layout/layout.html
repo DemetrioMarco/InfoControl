@@ -1,5 +1,6 @@
-<app-navbar/>
+<app-navbar />
 
-<main class="container-fluid py-4" style="min-height: calc(100vh - 56px);">
+<!-- Ajustamos margin-top (56px del header) y margin-left (250px del sidebar) -->
+<main class="bg-body-tertiary p-4 overflow-auto" style="margin-top: 56px; margin-left: 250px; min-height: calc(100vh - 56px);">
   <router-outlet />
 </main>

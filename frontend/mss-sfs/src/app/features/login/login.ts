@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,7 +12,7 @@ import { finalize } from 'rxjs';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit{
 
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
@@ -28,13 +28,14 @@ export class Login {
     password: ['', [Validators.required]]
   });
 
-  constructor(){
-    const error = this.route.snapshot.queryParamMap.get('error');
-    console.log('Query params:', this.route.snapshot.queryParams);
-    console.log('Error param:', error);
-    if(error) {
-      setTimeout(() => this.accessDeniedMessage = error);
-    }
+ 
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const error = params['error'];
+      if (error) {
+        this.accessDeniedMessage = error;
+      }
+    });
   }
 
   onSubmit(): void {
