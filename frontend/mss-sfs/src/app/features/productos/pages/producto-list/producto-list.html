@@ -1,0 +1,103 @@
+<div class="container-fluid py-4">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-0 fw-bold text-dark">Inventario de Productos</h5>
+        <p class="text-muted small mb-0">Gestione el catálogo y niveles de stock</p>
+      </div>
+      <button class="btn btn-primary px-4" (click)="openModal()">
+        <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
+      </button>
+    </div>
+
+    <div class="card-body">
+      <!-- Filtros Rápidos -->
+      <div class="row mb-4">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control bg-light border-0" 
+                   placeholder="Buscar por nombre, código o categoría..."
+                   [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">Código / Producto</th>
+              <th class="border-0">Categoría</th>
+              <th class="border-0 text-center">Stock Actual</th>
+              <th class="border-0 text-center">Estado Stock</th>
+              <th class="border-0 text-end">Precio</th>
+              <th class="border-0 text-center">Activo</th>
+              <th class="border-0 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredProductos(); track p.id) {
+              <tr>
+                <td>
+                  <div class="fw-bold text-dark">{{ p.nombre }}</div>
+                  <div class="text-primary small fw-medium">{{ p.codigoInterno }}</div>
+                </td>
+                <td>
+                  <div class="small">{{ p.categoriaNombre }}</div>
+                  <div class="text-muted smaller">{{ p.subcategoriaNombre }}</div>
+                </td>
+                <td class="text-center">
+                  <span class="fw-bold">{{ p.stockActual }}</span>
+                  <div class="smaller text-muted">{{ p.unidadMedidaNombre }}</div>
+                </td>
+                <td class="text-center">
+                  <span class="badge rounded-pill" [ngClass]="getStockClass(p.estadoStock)">
+                    {{ p.estadoStock }}
+                  </span>
+                </td>
+                <td class="text-end fw-bold text-dark">
+                  {{ p.precioUnitario | currency }}
+                </td>
+                <td class="text-center">
+                  <div class="form-check form-switch d-inline-block">
+                    <input class="form-check-input" type="checkbox" role="switch" 
+                           [checked]="p.activo" (change)="onToggleActivo(p.id)">
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group shadow-sm rounded">
+                    <button class="btn btn-white btn-sm" (click)="openModal(p.id)" title="Editar">
+                      <i class="bi bi-pencil text-primary"></i>
+                    </button>
+                    <button class="btn btn-white btn-sm" (click)="onDelete(p.id)" title="Eliminar">
+                      <i class="bi bi-trash text-danger"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  @if (loading()) {
+                    <div class="spinner-border text-primary" role="status"></div>
+                  } @else {
+                    <i class="bi bi-box-seam display-4 text-light d-block mb-2"></i>
+                    <span class="text-muted">No hay productos que mostrar</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (showModal()) {
+  <app-producto-form 
+    [id]="selectedId()" 
+    (onClose)="closeModal($event)">
+  </app-producto-form>
+}

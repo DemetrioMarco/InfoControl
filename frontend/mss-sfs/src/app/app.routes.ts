@@ -33,6 +33,19 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/users/users-list').then(m => m.UsersList),
                 title: 'Usuarios'
             },
+            // --- Sección de Inventario ---
+            {
+                path: 'inventary',
+                canActivate: [roleGuard],
+                data: { roles: [Role.SUPER_ADMIN, Role.ADMIN] },
+                children: [
+                    {
+                        path: 'products',
+                        loadComponent: () => import('./features/productos/pages/producto-list/producto-list').then(m => m.ProductoList),
+                        title: 'Productos'
+                    }
+                ]
+            },
             // --- Sección de Catálogos ---
             {
                 path: 'catalogs',

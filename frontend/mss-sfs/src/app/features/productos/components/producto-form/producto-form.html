@@ -1,0 +1,109 @@
+<div class="modal-backdrop fade show"></div>
+<div class="modal d-block" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold">
+          {{ isEdit() ? 'Editar Producto' : 'Nuevo Producto' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="close()"></button>
+      </div>
+      
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <!-- Nombre y Código -->
+            <div class="col-md-8">
+              <label class="form-label small fw-bold">Nombre del Producto</label>
+              <input type="text" class="form-control" formControlName="nombre">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">Código Interno</label>
+              <input type="text" class="form-control" formControlName="codigoInterno">
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+              <label class="form-label small fw-bold">Descripción</label>
+              <textarea class="form-control" formControlName="descripcion" rows="2"></textarea>
+            </div>
+
+            <!-- SELECTS DE CATÁLOGOS -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Categoría</label>
+              <select class="form-select" formControlName="categoriaId" (change)="onCategoriaChange()">
+                <option [ngValue]="null">Seleccione categoría...</option>
+                @for (cat of categorias(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Subcategoría</label>
+              <select class="form-select" formControlName="subcategoriaId" [attr.disabled]="subcategoriasFiltradas().length === 0 ? true : null">
+                <option [ngValue]="null">Seleccione subcategoría...</option>
+                @for (sub of subcategoriasFiltradas(); track sub.id) {
+                  <option [value]="sub.id">{{ sub.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Proveedor</label>
+              <select class="form-select" formControlName="proveedorId">
+                <option [ngValue]="null">Seleccione proveedor...</option>
+                @for (p of proveedores(); track p.id) {
+                  <option [value]="p.id">{{ p.razonSocial }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Unidad de Medida</label>
+              <select class="form-select" formControlName="unidadMedidaId">
+                <option [ngValue]="null">Seleccione unidad...</option>
+                @for (u of unidades(); track u.id) {
+                  <option [value]="u.id">{{ u.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Precios y Stock -->
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Precio Unitario</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" formControlName="precioUnitario">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Stock Actual</label>
+              <input type="number" class="form-control" formControlName="stockActual">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Stock Mínimo</label>
+              <input type="number" class="form-control" formControlName="stockMinimo">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Stock Máximo</label>
+              <input type="number" class="form-control" formControlName="stockMaximo">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light border-0">
+          <button type="button" class="btn btn-light px-4" (click)="close()" [disabled]="loading()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary px-4" [disabled]="form.invalid || loading()">
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ isEdit() ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
