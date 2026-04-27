@@ -55,6 +55,7 @@ public class ProductoController {
 
     @PostMapping
     public ResponseEntity<ProductoResponse.Detail> crear(@Valid @RequestBody ProductoRequest.Create request) {
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(productoService.crear(request));
     }
@@ -65,8 +66,8 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse.Detail> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProductoRequest.Update request) {
-        Long usuarioId = getUsuarioIdFromContext();
-        return ResponseEntity.ok(productoService.actualizar(id, request, usuarioId));
+
+        return ResponseEntity.ok(productoService.actualizar(id, request));
     }
 
     // ==================== ELIMINAR ====================
@@ -81,8 +82,7 @@ public class ProductoController {
 
     @PatchMapping("/{id}/toggle-activo")
     public ResponseEntity<ProductoResponse.Detail> toggleActivo(@PathVariable Long id) {
-        Long usuarioId = getUsuarioIdFromContext();
-        return ResponseEntity.ok(productoService.toggleActivo(id, usuarioId));
+        return ResponseEntity.ok(productoService.toggleActivo(id));
     }
 
     // ==================== STOCK ====================

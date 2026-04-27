@@ -77,6 +77,9 @@ public class ProductoRequest {
         @Positive(message = "El ID de proveedor debe ser positivo")
         private Long proveedorId;
 
+        @Positive(message = "ID del creador")
+        private Long creadoPor;
+
         @Min(value = 0, message = "El stock mínimo no puede ser negativo")
         private Integer stockMinimo;
 

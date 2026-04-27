@@ -25,7 +25,7 @@ public class OpenApiConfig {
                         .contact(new Contact()
                                 .name("Marco Demetrio")
                                 .email("marco.demetrio@gmail.com")
-                                .url("https://mdemetrio.com")
+                                .url("https://ronincore.com")
                         )
                 )
                 .components(new Components()

@@ -67,11 +67,11 @@ public class ProductoService {
     // ==================== ACTUALIZAR ====================
 
     @Transactional
-    public ProductoResponse.Detail actualizar(Long id, ProductoRequest.Update request, Long usuarioId) {
+    public ProductoResponse.Detail actualizar(Long id, ProductoRequest.Update request) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
-        productoMapper.updateEntity(request, producto, usuarioId);
+        productoMapper.updateEntity(request, producto);
         producto = productoRepository.save(producto);
 
         return obtenerPorId(producto.getId());
@@ -90,12 +90,12 @@ public class ProductoService {
     // ==================== TOGGLE ACTIVO ====================
 
     @Transactional
-    public ProductoResponse.Detail toggleActivo(Long id, Long usuarioId) {
+    public ProductoResponse.Detail toggleActivo(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
         producto.setActivo(!producto.getActivo());
-        producto.setModificadoPor(usuarioId);
+
         productoRepository.save(producto);
 
         return obtenerPorId(producto.getId());

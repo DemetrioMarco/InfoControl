@@ -38,7 +38,7 @@ public class ProductoMapper {
      * Convierte ProductoRequest.Update a Entity Producto (merge)
      * Solo actualiza campos permitidos
      */
-    public void updateEntity(ProductoRequest.Update request, Producto producto, Long modificadoPor) {
+    public void updateEntity(ProductoRequest.Update request, Producto producto) {
         producto.setNombre(request.getNombre());
         producto.setDescripcion(request.getDescripcion());
         producto.setCategoriaId(request.getCategoriaId());
@@ -56,7 +56,7 @@ public class ProductoMapper {
             producto.setActivo(request.getActivo());
         }
 
-        producto.setModificadoPor(modificadoPor);
+        producto.setModificadoPor(request.getCreadoPor());
     }
 
     /**
