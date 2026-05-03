@@ -1,4 +1,10 @@
 package com.infocontrol.apirest.repository;
 
-interface SubUbicacionRepository extends org.springframework.data.jpa.repository.JpaRepository<com.infocontrol.apirest.entity.SubUbicacion, java.lang.Long> {
+import com.infocontrol.apirest.entity.SubUbicacion;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface SubUbicacionRepository extends JpaRepository<SubUbicacion, Long> {
+
 }

@@ -6,6 +6,7 @@ import com.infocontrol.apirest.service.SubcategoriaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,7 @@ public class SubcategoriaController {
 
     @PostMapping
     public ResponseEntity<SubcategoriaResponse> createSubcategoria(@Valid @RequestBody SubcategoriaRequest.Create request) {
-        return new ResponseEntity<>(subcategoriaService.create(request), HttpStatus.CREATED);
+       return new ResponseEntity<>(subcategoriaService.create(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
