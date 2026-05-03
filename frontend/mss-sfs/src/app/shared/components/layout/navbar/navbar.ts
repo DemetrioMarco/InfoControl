@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../../core/services/auth.service';
+
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { Role } from '../../../core/models/role.enum';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Role } from '../../../../core/models/role.enum';
+
 
 @Component({
   selector: 'app-navbar',

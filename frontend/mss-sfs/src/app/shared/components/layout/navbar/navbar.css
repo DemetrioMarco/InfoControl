@@ -1,0 +1,86 @@
+/* Sidebar como Flexbox para empujar el footer abajo */
+.sidebar {
+  top: 56px;
+  bottom: 0;
+  width: 250px;
+  z-index: 1000;
+  display: flex !important;
+  flex-direction: column;
+}
+
+/* Estilos de navegación (Igual que antes pero optimizados) */
+.menu-header {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  color: #8a929a;
+  padding: 1.25rem 1rem 0.5rem 1.25rem;
+}
+
+.menu-divider {
+  border-top: 1px solid #dee2e6;
+  margin: 0.75rem 1.25rem;
+  opacity: 0.6;
+}
+
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  margin: 0 0.6rem;
+  color: #495057 !important;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.08) !important;
+  color: #0d6efd !important;
+}
+
+.nav-link.active {
+  background-color: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+/* --- ESTILOS DEL FOOTER Y PROFILE CARD --- */
+
+.sidebar-footer {
+  margin-top: auto; /* Empuja esta sección al final */
+}
+
+.avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.submenu-list {
+  border-left: 2px solid #dee2e6;
+  margin-left: 1.85rem !important;
+  padding-left: 0.5rem;
+}
+
+.transition-icon {
+  transition: transform 0.3s ease;
+}
+
+[aria-expanded="true"] .transition-icon {
+  transform: rotate(180deg);
+}
+
+/* Scrollbar fina para la sección de navegación */
+.flex-grow-1::-webkit-scrollbar {
+  width: 4px;
+}
+.flex-grow-1::-webkit-scrollbar-thumb {
+  background: #dbdbdb;
+  border-radius: 10px;
+}

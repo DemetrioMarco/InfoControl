@@ -29,7 +29,7 @@ export const routes: Routes = [
             {
                 path: 'users',
                 canActivate: [roleGuard],
-                data: { roles: [Role.SUPER_ADMIN, Role.ADMIN] },
+                data: { roles: [Role.SUPER_ADMIN] },
                 loadComponent: () => import('./features/users/users-list').then(m => m.UsersList),
                 title: 'Usuarios'
             },
@@ -76,6 +76,11 @@ export const routes: Routes = [
                         path: 'ubicaciones',
                         loadComponent: () => import('./features/catalogs/locations/location-list').then(m => m.LocationList),
                         title: 'Ubicación'
+                    },
+                    {
+                        path: 'sub-ubicacion',
+                        loadComponent: () => import('./features/catalogs/sububicacion/sub-ubicacion-list').then(m => m.SubUbicacionList),
+                        title: 'Sub Ubicación'
                     },
                     {
                         path: 'unidades-medida',
