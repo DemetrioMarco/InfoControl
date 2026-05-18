@@ -1,0 +1,109 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h5 class="mb-0 fw-bold text-dark">Registrar Movimiento de Inventario</h5>
+          <p class="text-muted small mb-0">Gestione entradas, salidas y traspasos de productos</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+          <div class="card-body p-4">
+            <div class="row g-4">
+              
+              <!-- Tipo de Movimiento -->
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-uppercase">Tipo de Operación</label>
+                <div class="btn-group w-100" role="group">
+                  <input type="radio" class="btn-check" formControlName="tipoMovimiento" value="ENTRADA" id="tipo1">
+                  <label class="btn btn-outline-success" for="tipo1">Entrada</label>
+
+                  <input type="radio" class="btn-check" formControlName="tipoMovimiento" value="SALIDA" id="tipo2">
+                  <label class="btn btn-outline-danger" for="tipo2">Salida</label>
+
+                  <input type="radio" class="btn-check" formControlName="tipoMovimiento" value="TRASPASO" id="tipo3">
+                  <label class="btn btn-outline-primary" for="tipo3">Traspaso</label>
+                </div>
+              </div>
+
+              <!-- Producto -->
+              <div class="col-md-5">
+                <label class="form-label small fw-bold text-uppercase">Producto</label>
+                <select class="form-select border-light bg-light" formControlName="productoId">
+                  <option [ngValue]="null">Seleccione un producto...</option>
+                  @for (p of productos(); track p.id) {
+                    <option [value]="p.id">{{ p.nombre }} ({{ p.codigoInterno }})</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Cantidad -->
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-uppercase">Cantidad</label>
+                <input type="number" class="form-control border-light bg-light" formControlName="cantidad" placeholder="0">
+              </div>
+
+              <hr class="my-2 opacity-10">
+
+              <!-- UBICACIONES DINÁMICAS -->
+              <div class="col-md-6" *ngIf="form.get('tipoMovimiento')?.value !== 'ENTRADA'">
+                <label class="form-label small fw-bold text-secondary text-uppercase">Ubicación Origen</label>
+                <select class="form-select" formControlName="subUbicacionOrigenId">
+                  <option [ngValue]="null">Desde dónde sale...</option>
+                  @for (s of subUbicaciones(); track s.id) {
+                    <option [value]="s.id">{{ s.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-md-6" *ngIf="form.get('tipoMovimiento')?.value !== 'SALIDA'">
+                <label class="form-label small fw-bold text-secondary text-uppercase">Ubicación Destino</label>
+                <select class="form-select" formControlName="subUbicacionDestinoId">
+                  <option [ngValue]="null">A dónde entra...</option>
+                  @for (s of subUbicaciones(); track s.id) {
+                    <option [value]="s.id">{{ s.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Referencia y Precio -->
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-uppercase">N° Referencia / Factura</label>
+                <input type="text" class="form-control border-light bg-light" formControlName="numeroReferencia" placeholder="Ej: FAC-001">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-uppercase">Motivo</label>
+                <input type="text" class="form-control border-light bg-light" formControlName="motivo" placeholder="Ej: Compra, Venta, Ajuste">
+              </div>
+
+              <div class="col-md-4" *ngIf="form.get('tipoMovimiento')?.value === 'ENTRADA'">
+                <label class="form-label small fw-bold text-uppercase">Costo Unitario (Opcional)</label>
+                <div class="input-group">
+                  <span class="input-group-text border-light bg-light">$</span>
+                  <input type="number" class="form-control border-light bg-light" formControlName="precioUnitario">
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-bold text-uppercase">Observaciones adicionales</label>
+                <textarea class="form-control border-light bg-light" formControlName="observaciones" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer bg-white py-3 d-flex justify-content-end border-0">
+            <button type="button" class="btn btn-link text-muted me-3 text-decoration-none" (click)="form.reset()">Limpiar</button>
+            <button type="submit" class="btn btn-primary px-5 shadow-sm" [disabled]="form.invalid || loading()">
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>Registrando...
+              } @else {
+                <i class="bi bi-check-circle me-2"></i>Confirmar Movimiento
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

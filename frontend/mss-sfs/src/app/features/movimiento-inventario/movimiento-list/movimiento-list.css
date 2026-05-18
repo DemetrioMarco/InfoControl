@@ -1,0 +1,22 @@
+.table thead th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: #6c757d;
+}
+
+.smaller {
+  font-size: 0.7rem;
+}
+
+.badge {
+  font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.02);
+}
+
+.font-monospace {
+  font-family: 'Courier New', Courier, monospace;
+}

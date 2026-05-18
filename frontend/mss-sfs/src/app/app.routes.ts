@@ -43,7 +43,18 @@ export const routes: Routes = [
                         path: 'products',
                         loadComponent: () => import('./features/productos/pages/producto-list/producto-list').then(m => m.ProductoList),
                         title: 'Productos'
+                    },
+                    {
+                        path: 'movements',
+                        loadComponent: () => import('./features/movimiento-inventario/movimiento-inventario').then(m => m.MovimientoInventario),
+                        title: 'Movimientos de Inventario'
+                    },
+                    {
+                        path: 'movements-history',
+                        loadComponent: () => import('./features/movimiento-inventario/movimiento-list/movimiento-list').then(m => m.MovimientoList),
+                        title: 'Historial de Movimientos'
                     }
+
                 ]
             },
             // --- Sección de Catálogos ---
