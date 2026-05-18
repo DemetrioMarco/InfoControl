@@ -1,4 +1,3 @@
-// CategoriaController.java
 package com.infocontrol.apirest.controller;
 
 import com.infocontrol.apirest.dto.request.CategoriaRequest;

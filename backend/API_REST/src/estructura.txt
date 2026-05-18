@@ -1,0 +1,118 @@
+.
+├── estructura.txt
+├── main
+│   ├── java
+│   │   └── com
+│   │       └── infocontrol
+│   │           └── apirest
+│   │               ├── ApiRestApplication.java
+│   │               ├── config
+│   │               │   ├── CorsConfig.java
+│   │               │   ├── JwtAuthFilter.java
+│   │               │   ├── OpenApiConfig.java
+│   │               │   ├── PasswordConfig.java
+│   │               │   └── SecurityConfig.java
+│   │               ├── controller
+│   │               │   ├── AuthController.java
+│   │               │   ├── CategoriaController.java
+│   │               │   ├── ProductoController.java
+│   │               │   ├── ProveedorController.java
+│   │               │   ├── SubUbicacionController.java
+│   │               │   ├── SubcategoriaController.java
+│   │               │   ├── TipoUbicacionController.java
+│   │               │   ├── UbicacionController.java
+│   │               │   ├── UnidadMedidaController.java
+│   │               │   └── UsuarioController.java
+│   │               ├── dto
+│   │               │   ├── request
+│   │               │   │   ├── CategoriaRequest.java
+│   │               │   │   ├── ChangePasswordRequest.java
+│   │               │   │   ├── LoginRequest.java
+│   │               │   │   ├── ProductoRequest.java
+│   │               │   │   ├── ProveedorRequest.java
+│   │               │   │   ├── RefreshRequest.java
+│   │               │   │   ├── RegisterRequest.java
+│   │               │   │   ├── SubUbicacionRequest.java
+│   │               │   │   ├── SubcategoriaRequest.java
+│   │               │   │   ├── TipoUbicacionRequest.java
+│   │               │   │   ├── UbicacionRequest.java
+│   │               │   │   ├── UnidadMedidaRequest.java
+│   │               │   │   ├── UsuarioRequest.java
+│   │               │   │   └── UsuarioUpdateRequest.java
+│   │               │   └── response
+│   │               │       ├── ApiErrorResponse.java
+│   │               │       ├── AuthResponse.java
+│   │               │       ├── CategoriaResponse.java
+│   │               │       ├── ProductoResponse.java
+│   │               │       ├── ProveedorResponse.java
+│   │               │       ├── SubUbicacionResponse.java
+│   │               │       ├── SubcategoriaResponse.java
+│   │               │       ├── TipoUbicacionResponse.java
+│   │               │       ├── UbicacionResponse.java
+│   │               │       ├── UnidadMedidaResponse.java
+│   │               │       └── UserResponse.java
+│   │               ├── entity
+│   │               │   ├── Categoria.java
+│   │               │   ├── Producto.java
+│   │               │   ├── Proveedor.java
+│   │               │   ├── Role.java
+│   │               │   ├── SubUbicacion.java
+│   │               │   ├── Subcategoria.java
+│   │               │   ├── TipoUbicacion.java
+│   │               │   ├── Ubicacion.java
+│   │               │   ├── UnidadMedida.java
+│   │               │   └── Usuario.java
+│   │               ├── exception
+│   │               │   ├── GlobalExceptionHandler.java
+│   │               │   ├── auth
+│   │               │   │   ├── InvalidCredentialsException.java
+│   │               │   │   ├── InvalidRefreshTokenException.java
+│   │               │   │   ├── PasswordConfirmException.java
+│   │               │   │   └── PasswordMismatchException.java
+│   │               │   └── base
+│   │               │       ├── BusinessRuleException.java
+│   │               │       ├── DuplicateResourceException.java
+│   │               │       ├── InvalidOperationException.java
+│   │               │       └── ResourceNotFoundException.java
+│   │               ├── mapper
+│   │               │   ├── CategoriaMapper.java
+│   │               │   ├── ProductoMapper.java
+│   │               │   ├── UserMapper.java
+│   │               │   └── rowmapper
+│   │               │       ├── ProductoDetailRowMapper.java
+│   │               │       └── ProductoListRowMapper.java
+│   │               ├── repository
+│   │               │   ├── CategoriaRepository.java
+│   │               │   ├── ProductoRepository.java
+│   │               │   ├── ProductoRepositoryCustom.java
+│   │               │   ├── ProveedorRepository.java
+│   │               │   ├── SubUbicacionRepository.java
+│   │               │   ├── SubcategoriaRepository.java
+│   │               │   ├── TipoUbicacionRepository.java
+│   │               │   ├── UbicacionRepository.java
+│   │               │   ├── UnidadMedidaRepository.java
+│   │               │   ├── UsuarioRepository.java
+│   │               │   └── impl
+│   │               │       └── ProductoRepositoryCustomImpl.java
+│   │               └── service
+│   │                   ├── AuthService.java
+│   │                   ├── CategoriaService.java
+│   │                   ├── JwtService.java
+│   │                   ├── ProductoService.java
+│   │                   ├── ProveedorService.java
+│   │                   ├── SubUbicacionService.java
+│   │                   ├── SubcategoriaService.java
+│   │                   ├── TipoUbicacionService.java
+│   │                   ├── UbicacionService.java
+│   │                   ├── UnidadMedidaService.java
+│   │                   └── UsuarioService.java
+│   └── resources
+│       └── application.properties
+└── test
+    └── java
+        └── com
+            └── infocontrol
+                └── apirest
+                    └── ApiRestApplicationTests.java
+
+26 directories, 90 files

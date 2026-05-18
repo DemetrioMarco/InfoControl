@@ -46,7 +46,7 @@ public class Subcategoria {
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(nullable = false)
+    @Column(name = "activo", nullable = false)
     @Builder.Default
     private Boolean activo = true;
 
