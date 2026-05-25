@@ -1,0 +1,20 @@
+.card {
+  border-radius: 12px;
+}
+
+.smaller {
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+}
+
+.progress {
+  background-color: #f0f0f0;
+}
+
+.progress-bar {
+  background-color: #0d6efd;
+}
+
+.table th {
+  border: none;
+}

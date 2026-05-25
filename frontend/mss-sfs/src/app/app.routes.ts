@@ -57,6 +57,29 @@ export const routes: Routes = [
 
                 ]
             },
+            // --- Sección de Reportes ---
+            {
+                path: 'reports',
+                canActivate: [roleGuard],
+                data: { roles: [Role.SUPER_ADMIN, Role.ADMIN] },
+                children: [
+                    {
+                        path: 'stock-location',
+                        loadComponent: () => import('./features/reports/stock-report/stock-report').then(m => m.StockReport),
+                        title: 'Stock por Ubicación'
+                    },
+                    {
+                        path: 'stock-product',
+                        loadComponent: () => import('./features/reports/stock-product-report/stock-product-report').then(m => m.StockProductReport),
+                        title: 'Stock por Producto'
+                    },
+                   {
+                        path: 'product-audit', // <-- Nueva ruta
+                        loadComponent: () => import('./features/reports/product-audit/product-audit').then(m => m.ProductAudit),
+                        title: 'Trazabilidad de Producto'
+                    },
+                ]
+            },
             // --- Sección de Catálogos ---
             {
                 path: 'catalogs',

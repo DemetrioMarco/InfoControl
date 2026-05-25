@@ -1,7 +1,7 @@
 <!-- BARRA SUPERIOR (Limpia y minimalista) -->
 <nav class="navbar navbar-dark bg-dark px-3 fixed-top shadow-sm" style="height: 56px;">
   <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/app/dashboard">
-    <i class="bi bi-shield-check me-2 text-primary"></i> 
+    <i class="bi bi-shield-check me-2 text-primary"></i>
     <span>InfoControl</span>
   </a>
   <!-- Aquí podrías poner un buscador o notificaciones en el futuro -->
@@ -9,66 +9,108 @@
 
 <!-- MENÚ LATERAL -->
 <aside class="sidebar bg-light border-end fixed-top d-flex flex-column">
-  
+
   <!-- Contenedor Superior: Navegación (con scroll si es necesario) -->
   <div class="flex-grow-1 overflow-y-auto py-3">
     @if (hasRole(Role.SUPER_ADMIN, Role.ADMIN)) {
-      <ul class="nav nav-pills flex-column gap-1">
-        
-        <div class="menu-header">Administración</div>
-        <li class="nav-item">
-          <a class="nav-link text-dark" routerLink="/app/dashboard" routerLinkActive="active">
-            <i class="bi bi-grid-1x2 me-2"></i> Dashboard
-          </a>
-        </li>
+    <ul class="nav nav-pills flex-column gap-1">
 
-        @if(hasRole(Role.SUPER_ADMIN)){
-        <li class="nav-item">
-          <a class="nav-link text-dark" routerLink="/app/users" routerLinkActive="active">
-            <i class="bi bi-people me-2"></i> Usuarios
-          </a>
-        </li>
+      <div class="menu-header">Administración</div>
+      <li class="nav-item">
+        <a class="nav-link text-dark" routerLink="/app/dashboard" routerLinkActive="active">
+          <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+        </a>
+      </li>
+
+      @if(hasRole(Role.SUPER_ADMIN)){
+      <li class="nav-item">
+        <a class="nav-link text-dark" routerLink="/app/users" routerLinkActive="active">
+          <i class="bi bi-people me-2"></i> Usuarios
+        </a>
+      </li>
       }
-        <div class="menu-divider"></div>
+      <div class="menu-divider"></div>
 
-        <div class="menu-header">Gestión de Stock</div>
-        <li class="nav-item px-2">
-          <a class="nav-link text-dark fw-semibold d-flex justify-content-between align-items-center" 
-             data-bs-toggle="collapse" href="#collapseInventory" role="button">
-            <span><i class="bi bi-box-seam me-2"></i> Inventario</span>
-            <i class="bi bi-chevron-down small transition-icon"></i>
-          </a>
-          <div class="collapse" id="collapseInventory">
-            <ul class="nav nav-pills flex-column submenu-list mt-1 gap-1">
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/products" routerLinkActive="active">Productos</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/movements" routerLinkActive="active">Movimientos</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/movements-history" routerLinkActive="active">Historial de Movimientos</a></li>
-            </ul>
-          </div>
-        </li>
+      <div class="menu-header">Gestión de Stock</div>
+      <li class="nav-item px-2">
+        <a class="nav-link text-dark fw-semibold d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#collapseInventory" role="button">
+          <span><i class="bi bi-box-seam me-2"></i> Inventario</span>
+          <i class="bi bi-chevron-down small transition-icon"></i>
+        </a>
+        <div class="collapse" id="collapseInventory">
+          <ul class="nav nav-pills flex-column submenu-list mt-1 gap-1">
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/products"
+                routerLinkActive="active">Productos</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/movements"
+                routerLinkActive="active">Movimientos</a></li>
 
-        <div class="menu-divider"></div>
+          </ul>
+        </div>
+      </li>
 
-        <div class="menu-header">Configuración</div>
-        <li class="nav-item px-2">
-          <a class="nav-link text-dark fw-semibold d-flex justify-content-between align-items-center" 
-             data-bs-toggle="collapse" href="#collapseCatalogs" role="button">
-            <span><i class="bi bi-tags me-2"></i> Catálogos</span>
-            <i class="bi bi-chevron-down small transition-icon"></i>
-          </a>
-          <div class="collapse" id="collapseCatalogs">
-            <ul class="nav nav-pills flex-column submenu-list mt-1 gap-1">
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/suppliers" routerLinkActive="active">Proveedores</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/categorias" routerLinkActive="active">Categorías</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/subcategorias" routerLinkActive="active">Subcategorías</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/tipo-ubicacion" routerLinkActive="active">Tipo de Ubicación</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/ubicaciones" routerLinkActive="active">Ubicaciones</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/sub-ubicacion" routerLinkActive="active">SubUbicacion</a></li>
-              <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/unidades-medida" routerLinkActive="active">Unid. de Medida</a></li>
-            </ul>
-          </div>
-        </li>
-      </ul>
+      <div class="menu-divider"></div>
+
+      <div class="menu-header">Análisis y Reportes</div>
+      <li class="nav-item px-2">
+        <a class="nav-link text-dark fw-semibold d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#collapseReports" role="button">
+          <span><i class="bi bi-bar-chart-line me-2"></i> Reportes</span>
+          <i class="bi bi-chevron-down small transition-icon"></i>
+        </a>
+        <div class="collapse" id="collapseReports">
+          <ul class="nav nav-pills flex-column submenu-list mt-1 gap-1">
+            <li class="nav-item">
+              <a class="nav-link text-dark py-1" routerLink="/app/reports/stock-location" routerLinkActive="active">
+                Stock por Ubicación
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link text-dark py-1" routerLink="/app/reports/stock-product" routerLinkActive="active">Stock
+                por Producto</a>
+            </li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/inventary/movements-history"
+                routerLinkActive="active">Movimientos</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark py-1" routerLink="/app/reports/product-audit" routerLinkActive="active">
+                Trazabilidad (Auditoría)
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <div class="menu-divider"></div>
+
+      <div class="menu-header">Configuración</div>
+      <li class="nav-item px-2">
+        <a class="nav-link text-dark fw-semibold d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#collapseCatalogs" role="button">
+          <span><i class="bi bi-tags me-2"></i> Catálogos</span>
+          <i class="bi bi-chevron-down small transition-icon"></i>
+        </a>
+        <div class="collapse" id="collapseCatalogs">
+          <ul class="nav nav-pills flex-column submenu-list mt-1 gap-1">
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/suppliers"
+                routerLinkActive="active">Proveedores</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/categorias"
+                routerLinkActive="active">Categorías</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/subcategorias"
+                routerLinkActive="active">Subcategorías</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/tipo-ubicacion"
+                routerLinkActive="active">Tipo de Ubicación</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/ubicaciones"
+                routerLinkActive="active">Ubicaciones</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/sub-ubicacion"
+                routerLinkActive="active">SubUbicacion</a></li>
+            <li class="nav-item"><a class="nav-link text-dark py-1" routerLink="/app/catalogs/unidades-medida"
+                routerLinkActive="active">Unid. de Medida</a></li>
+          </ul>
+        </div>
+      </li>
+    </ul>
     }
   </div>
 
@@ -89,11 +131,11 @@
         </button>
       </div>
     </div>
-    
+
     <!-- Branding/Copyright -->
     <div class="pb-3 px-3 text-center">
       <div class="text-muted" style="font-size: 0.6rem;">
-        &copy; 2026  &reg;<strong>InfoControl</strong>.
+        &copy; 2026 &reg;<strong>InfoControl</strong>. V1.3
         <br>
         Todos los derechos reservados.
       </div>
