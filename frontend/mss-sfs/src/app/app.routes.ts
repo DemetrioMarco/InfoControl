@@ -53,6 +53,11 @@ export const routes: Routes = [
                         path: 'movements-history',
                         loadComponent: () => import('./features/movimiento-inventario/movimiento-list/movimiento-list').then(m => m.MovimientoList),
                         title: 'Historial de Movimientos'
+                    },
+                    {
+                        path: 'toma-inventario',
+                        loadComponent: () => import('./features/conteo-inventario/conteo-inventario').then(m => m.ConteoInventario),
+                        title:'Toma de inventarios'
                     }
 
                 ]

@@ -1,0 +1,194 @@
+<div class="container py-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h4 class="fw-bold">Control de Inventario</h4>
+        <button class="btn btn-primary" (click)="paso.set(paso() === 2 ? 1 : 2)">
+            {{ paso() === 2 ? '+ Programar' : 'Ver Listado' }}
+        </button>
+    </div>
+
+    <!-- PASO 1: PROGRAMACIÓN -->
+    @if (paso() === 1) {
+    <div class="card p-4 shadow-sm border-0 bg-light">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="small fw-bold">Tipo</label>
+                <select class="form-select" (change)="onTipoChange(+($any($event.target).value))">
+                    <option value="">Seleccione...</option>
+                    @for (t of tipos(); track t.id) { <option [value]="t.id">{{t.nombre}}</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">Ubicación</label>
+                <select class="form-select" (change)="onUbicacionChange(+($any($event.target).value))">
+                    <option value="">Seleccione...</option>
+                    @for (u of ubicaciones(); track u.id) { <option [value]="u.id">{{u.nombre}}</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">Sub-Ubicación</label>
+                <select class="form-select" (change)="onSubUbicacionChange(+($any($event.target).value))">
+                    <option value="">Seleccione...</option>
+                    @for (s of subUbicacionesCombo(); track s.id) { <option [value]="s.id">{{s.nombre}}</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">Fecha</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaProgramada">
+            </div>
+        </div>
+        @if (productosReferencia().length > 0) {
+        <button class="btn btn-success mt-4 w-100" (click)="programarNuevaToma()">Confirmar Programación</button>
+        }
+    </div>
+    }
+
+    <!-- PASO 2: LISTADO -->
+    @if (paso() === 2) {
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">ID</th>
+                    <th>FECHA</th>
+                    <th>ÁREA / UBICACIÓN</th>
+                    <th class="text-center">ESTADO</th> <!-- Nueva columna opcional -->
+                    <th class="text-center pe-3">ACCIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (toma of tomasPendientes(); track toma.id) {
+                <tr>
+                    <td class="ps-3"># {{ toma.id }}</td>
+                    <td>{{ toma.fechaProgramada | date:'dd/MM/yyyy' }}</td>
+                    <td class="ps-3">
+                        <!-- Camino: Tipo / Ubicación -->
+                        <div class="text-muted"
+                            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            {{ getPathAnterior(toma.subUbicacionId) }}
+                        </div>
+                        <!-- Sub-ubicación -->
+                        <div class="fw-bold text-dark">
+                            {{ getNombreSubUbicacion(toma.subUbicacionId) }}
+                        </div>
+                    </td>
+
+                    <!-- Badge de estado -->
+                    <td class="text-center">
+                        <span class="badge rounded-pill"
+                            [class]="toma.estado === 'PROGRAMADA' ? 'bg-primary' : 'bg-success'">
+                            {{ toma.estado }}
+                        </span>
+                    </td>
+
+                    <td class="text-center pe-3">
+                        @if (toma.estado === 'PROGRAMADA') {
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                            (click)="seleccionarTomaParaContar(toma)">
+                            <i class="bi bi-clipboard-check me-1"></i> Recuperar y Contar
+                        </button>
+                        }
+
+                        @if (toma.estado === 'CONTADA' && hasRole(Role.SUPER_ADMIN)) {
+                        <button class="btn btn-sm btn-outline-success rounded-pill px-3"
+                            (click)="verResultadosToma(toma)">
+                            <i class="bi bi-eye-fill me-1"></i> Ver Ajustes
+                        </button>
+                        }
+                    </td>
+                </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+    }
+
+
+    <!-- PASO 3: TABLA DE CONTEO (CONTEO CIEGO) -->
+    @if (paso() === 3 && tomaSeleccionada()) {
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Captura Física: {{ getNombreSubUbicacion(tomaSeleccionada().subUbicacionId) }}</h5>
+        </div>
+        <table class="table align-middle border-top">
+            <thead class="table-dark">
+                <tr>
+                    <th class="ps-3">NOMBRE DEL PRODUCTO</th>
+                    <th class="text-center" style="width: 200px;">CANTIDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (det of tomaSeleccionada().detalles; track det.id) {
+                <tr>
+                    <td class="ps-3">
+                        <div class="fw-bold">{{ det.productoNombre }}</div>
+                        <small class="text-muted">ID: {{ det.productoId }}</small>
+                    </td>
+                    <td class="pe-3">
+                        <input type="number" class="form-control text-center border-primary fw-bold"
+                            [(ngModel)]="conteosCapturados[det.id]" placeholder="0">
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        <div class="p-4 bg-light">
+            <button class="btn btn-primary btn-lg w-100 shadow" (click)="finalizarConteo()">Finalizar y Ver
+                Diferencias</button>
+        </div>
+    </div>
+    }
+
+    <!-- PASO 4: RESULTADO -->
+    @if (paso() === 4 && tomaSeleccionada()) {
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="bg-success text-white p-3 d-flex justify-content-between">
+            <h5 class="mb-0">Resultados Auditoría #{{tomaSeleccionada().id}}</h5>
+            <span class="badge bg-white text-success px-2 py-1">ESTADO: {{ tomaSeleccionada().estado }}</span>
+        </div>
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">PRODUCTO</th>
+                    <th class="text-center">SISTEMA</th>
+                    <th class="text-center">FÍSICO</th>
+                    <th class="text-end pe-3">DIFERENCIA</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (det of tomaSeleccionada().detalles; track det.id) {
+                <tr>
+                    <td class="ps-3">
+                        <div class="fw-bold">{{ det.productoNombre }}</div>
+                        <small class="text-muted">ID: {{ det.productoId }}</small>
+                    </td>
+                    <td class="text-center">{{ det.cantidadSistema }}</td>
+                    <td class="text-center">{{ det.cantidadFisica }}</td>
+                    <td class="text-end pe-3 fw-bold" [class.text-danger]="det.diferencia !== 0">
+                        {{ det.diferencia > 0 ? '+' : '' }}{{ det.diferencia }}
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        <div class="card-footer bg-light p-3 d-flex justify-content-between">
+            <button class="btn btn-outline-secondary px-4" (click)="paso.set(2)">
+                Regresar al Listado
+            </button>
+
+            <!-- Botón de Ajuste: Solo si el estado es CONTADA y es Admin -->
+            @if (tomaSeleccionada().estado === 'CONTADA' && hasRole(Role.SUPER_ADMIN)) {
+            <button class="btn btn-primary px-5 shadow" (click)="aplicarAjustes()" [disabled]="loadingAjuste()">
+                @if (loadingAjuste()) {
+                <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
+                } @else {
+                <i class="bi bi-gear-fill me-2"></i> Aplicar Ajustes en Stock
+                }
+            </button>
+            }
+        </div>
+    </div>
+    }
+
+
+</div>

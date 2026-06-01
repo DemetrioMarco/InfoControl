@@ -1,0 +1,67 @@
+/* Reutilizando tus clases */
+.card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+
+.smaller {
+  font-size: 0.68rem;
+}
+
+.font-monospace {
+  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.table thead th {
+  font-size: 0.65rem;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+  background-color: #f8f9fa;
+  z-index: 10;
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 10px;
+}
+
+.badge {
+  font-size: 0.65rem;
+  padding: 0.35em 0.65em;
+  font-weight: 700;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.05);
+}
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  background-color: white;
+  border: none;
+}
+
+/* Específicos para el input de conteo */
+.form-control-lg {
+  font-size: 1.5rem;
+  border-radius: 8px;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
