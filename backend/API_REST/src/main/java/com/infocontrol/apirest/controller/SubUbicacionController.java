@@ -32,6 +32,12 @@ public class SubUbicacionController {
         return ResponseEntity.ok(subUbicacion);
     }
 
+    @GetMapping("/by-ubicacion/{id}/activos")
+    public ResponseEntity<List<SubUbicacionResponse>> getByUbicacionId(@PathVariable Long id){
+        List<SubUbicacionResponse> subUbicaciones = subUbicacionService.getByUbicacionId(id);
+        return ResponseEntity.ok(subUbicaciones);
+    }
+
     @PostMapping
     public ResponseEntity<SubUbicacionResponse> create(@Valid @RequestBody SubUbicacionRequest.Create request) {
         SubUbicacionResponse subUbicacion = subUbicacionService.create(request);

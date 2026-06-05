@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "producto_historial")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class ProductoHistorial {
 
     @Id

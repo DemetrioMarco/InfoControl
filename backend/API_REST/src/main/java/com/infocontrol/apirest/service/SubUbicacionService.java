@@ -36,6 +36,12 @@ public class SubUbicacionService {
         return mapToResponse(subUbicacion);
     }
 
+    @Transactional(readOnly = true)
+    public List<SubUbicacionResponse>  getByUbicacionId(Long id) {
+        return subUbicacionRepository.findByUbicacionId(id).stream().map(this::mapToResponse).collect(Collectors.toList());
+
+    }
+
     @Transactional
     public SubUbicacionResponse create(SubUbicacionRequest.Create request) {
         Ubicacion ubicacion = ubicacionRepository.findById(request.getUbicacionId())
