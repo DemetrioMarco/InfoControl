@@ -2,16 +2,20 @@ package com.infocontrol.apirest.service;
 
 import com.infocontrol.apirest.dto.request.MovimientoInventarioRequest;
 import com.infocontrol.apirest.dto.response.MovimientoInventarioResponse;
+import com.infocontrol.apirest.dto.response.MovimientoResponse;
 import com.infocontrol.apirest.entity.MovimientoInventario;
 import com.infocontrol.apirest.repository.MovimientoInventarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovimientoInventarioService {
@@ -19,7 +23,7 @@ public class MovimientoInventarioService {
     private final MovimientoInventarioRepository movimientoInventarioRepository;
 
     @Transactional
-    public void registrarMovimiento(MovimientoInventarioRequest request) {
+    public MovimientoResponse registrarMovimiento(MovimientoInventarioRequest request) {
         List<Map<String, Object>> resultado = movimientoInventarioRepository.registrarMovimiento(
                 request.getProductoId(),
                 request.getTipoMovimiento(),
@@ -33,12 +37,27 @@ public class MovimientoInventarioService {
                 request.getNumeroReferencia()
         );
 
+        log.info("Resultado: {}", resultado);
+
         Map<String, Object> respuesta = resultado.getFirst();
+
+        log.info("Respuesta: {}", respuesta.get("id"));
         Boolean exitoso = (Boolean) respuesta.get("exitoso");
 
-        if (!exitoso) {
-            throw new RuntimeException((String) respuesta.get("mensaje"));
+        MovimientoResponse response = new MovimientoResponse();
+        response.setExitoso(Boolean.TRUE.equals(exitoso));
+        response.setMensaje((String) respuesta.get("mensaje"));
+
+        Object idObj = respuesta.get("movimiento_id");
+        if (idObj != null) {
+            response.setId(Long.valueOf(idObj.toString()));
         }
+
+        if (!Boolean.TRUE.equals(exitoso)) {
+            throw new RuntimeException(response.getMensaje());
+        }
+
+        return response;
     }
 
     @Transactional(readOnly = true)

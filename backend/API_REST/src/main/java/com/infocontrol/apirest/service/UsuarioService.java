@@ -1,5 +1,6 @@
 package com.infocontrol.apirest.service;
 
+import com.infocontrol.apirest.dto.request.UpdateUserStatusDto;
 import lombok.RequiredArgsConstructor;
 import com.infocontrol.apirest.dto.request.ChangePasswordRequest;
 import com.infocontrol.apirest.dto.request.UsuarioRequest;
@@ -56,9 +57,17 @@ public class UsuarioService implements UserDetailsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
+    @Transactional(readOnly = true)
+    public boolean emailExiste(String email, Long excludeId) {
+        if (excludeId == null) {
+            return repo.existsByEmailIgnoreCase(email);
+        }
+        return repo.existsByEmailIgnoreCaseAndIdNot(email, excludeId);
+    }
+
     @Transactional
     public UserResponse crear(UsuarioRequest request) {
-        if (repo.existsByEmail(request.email())) {
+        if (repo.existsByEmailIgnoreCase(request.email())) {
             throw new DuplicateResourceException("Email ya registrado: " + request.email());
         }
 
@@ -77,7 +86,7 @@ public class UsuarioService implements UserDetailsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         boolean emailCambio = !user.getEmail().equalsIgnoreCase(request.email());
-        if (emailCambio && repo.existsByEmail(request.email())) {
+        if (emailCambio && repo.existsByEmailIgnoreCase(request.email())) {
             throw new DuplicateResourceException("Email ya registrado: " + request.email());
         }
 
@@ -113,4 +122,14 @@ public class UsuarioService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.passwordNuevo()));
         repo.save(user);
     }
+
+    @Transactional
+    public UserResponse cambiarEstado(Long id, UpdateUserStatusDto request) {
+        Usuario user = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+
+        user.setEnabled(request.enabled());
+        return UserMapper.toResponse(repo.save(user));
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.infocontrol.apirest.controller;
 
+import com.infocontrol.apirest.dto.request.UpdateUserStatusDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,7 +34,6 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // ─── GET /api/usuarios ────────────────────────────────────────────────────
     @GetMapping
     @Operation(summary = "Listar todos los usuarios")
     @ApiResponses({
@@ -45,7 +45,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
-    // ─── GET /api/usuarios/{id} ───────────────────────────────────────────────
     @GetMapping("/{id}")
     @Operation(summary = "Obtener usuario por ID")
     @ApiResponses({
@@ -60,7 +59,19 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
     }
 
-    // ─── POST /api/usuarios ───────────────────────────────────────────────────
+    @GetMapping("/exists-email")
+    @Operation(summary = "Verificar si un email ya existe")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Resultado de la validación", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Sin permisos", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public ResponseEntity<Boolean> existsEmail(
+            @RequestParam String email,
+            @RequestParam(required = false) Long excludeId) {
+        return ResponseEntity.ok(usuarioService.emailExiste(email, excludeId));
+    }
+
     @PostMapping
     @Operation(summary = "Crear nuevo usuario")
     @ApiResponses({
@@ -69,13 +80,12 @@ public class UsuarioController {
             @ApiResponse(responseCode = "409", description = "Email ya existe", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Sin permisos", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
-    public ResponseEntity<UserResponse> crear( @Valid @RequestBody UsuarioRequest request) {
+    public ResponseEntity<UserResponse> crear(@Valid @RequestBody UsuarioRequest request) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(usuarioService.crear(request));
     }
 
-    // ─── PUT /api/usuarios/{id} ───────────────────────────────────────────────
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar usuario existente")
     @ApiResponses({
@@ -92,7 +102,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizar(id, request));
     }
 
-    // ─── DELETE /api/usuarios/{id} ────────────────────────────────────────────
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar usuario")
     @ApiResponses({
@@ -107,7 +116,6 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─── PATCH /api/usuarios/{id}/password ────────────────────────────────────
     @PatchMapping("/{id}/password")
     @Operation(
             summary = "Cambiar contraseña de usuario",
@@ -129,4 +137,21 @@ public class UsuarioController {
         usuarioService.cambiarPassword(id, request);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Cambiar estado del usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado actualizado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Sin permisos",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public ResponseEntity<UserResponse> cambiarEstado(
+            @Parameter(description = "ID del usuario", required = true)
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserStatusDto request) {
+        return ResponseEntity.ok(usuarioService.cambiarEstado(id, request));
+    }
+
 }

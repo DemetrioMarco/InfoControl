@@ -2,6 +2,7 @@ package com.infocontrol.apirest.controller;
 
 import com.infocontrol.apirest.dto.request.MovimientoInventarioRequest;
 import com.infocontrol.apirest.dto.response.MovimientoInventarioResponse;
+import com.infocontrol.apirest.dto.response.MovimientoResponse;
 import com.infocontrol.apirest.service.MovimientoInventarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,9 @@ public class MovimientoInventarioController {
     private final MovimientoInventarioService movimientoInventarioService;
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> registrarMovimiento(@RequestBody MovimientoInventarioRequest request) {
-        movimientoInventarioService.registrarMovimiento(request);
-        return ResponseEntity.ok(Map.of("mensaje", "Movimiento registrado exitosamente"));
+    public ResponseEntity<MovimientoResponse> registrar(@RequestBody MovimientoInventarioRequest request) {
+        MovimientoResponse response = movimientoInventarioService.registrarMovimiento(request);
+        return ResponseEntity.ok(response);
     }
 
 

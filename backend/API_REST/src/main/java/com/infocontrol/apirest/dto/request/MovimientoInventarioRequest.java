@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 @Data
 public class MovimientoInventarioRequest {
 
+    private Long movimientoId;
+
     @NotNull
     private Long productoId;
 
