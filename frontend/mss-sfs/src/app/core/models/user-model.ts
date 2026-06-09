@@ -18,3 +18,23 @@ export interface UserFormModel {
   rol: Role;
   enabled: boolean;
 }
+
+export interface CreateUserDto {
+  nombre: string;
+  email: string;
+  password: string;
+  rol: Role;
+  enabled: boolean;
+}
+
+export interface UpdateUserDto {
+  nombre: string;
+  email: string;
+  password?: string;
+  rol: Role;
+  enabled: boolean;
+}
+
+export interface UpdateUserStatusDto {
+  enabled: boolean;
+}

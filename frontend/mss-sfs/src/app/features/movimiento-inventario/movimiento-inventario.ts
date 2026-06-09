@@ -1,11 +1,19 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+
 import { MovimientoInventarioService } from '../../core/services/movimiento-inventario.service';
 import { ProductoService } from '../../core/services/producto.service';
 import { SubUbicacionService } from '../../core/services/sububicacion.service';
-import { MovimientoInventarioRequest, TipoMovimiento } from '../../core/models/movimiento-inventario.model';
+import { DocumentoMovimientoService } from '../../core/services/documento-movimiento.service';
+
+import {
+  MovimientoInventarioRequest,
+  TipoMovimiento,
+  MovimientoResponse
+} from '../../core/models/movimiento-inventario.model';
 
 @Component({
   selector: 'app-movimiento-inventario',
@@ -19,11 +27,15 @@ export class MovimientoInventario implements OnInit {
   private movimientoService = inject(MovimientoInventarioService);
   private productoService = inject(ProductoService);
   private subUbicacionService = inject(SubUbicacionService);
+  private documentoMovimientoService = inject(DocumentoMovimientoService);
 
-  // Señales para catálogos
   productos = signal<any[]>([]);
   subUbicaciones = signal<any[]>([]);
   loading = signal(false);
+
+  archivoSeleccionado = signal<File | null>(null);
+  nombreArchivo = signal<string>('');
+  maxFileSize = 10 * 1024 * 1024; // 10 MB
 
   form: FormGroup = this.fb.group({
     tipoMovimiento: ['ENTRADA', [Validators.required]],
@@ -42,20 +54,24 @@ export class MovimientoInventario implements OnInit {
     this.watchTipoMovimiento();
   }
 
+  get esEntrada(): boolean {
+    return this.form.get('tipoMovimiento')?.value === 'ENTRADA';
+  }
+
   private cargarCatalogos(): void {
     this.productoService.getAll().subscribe(data => this.productos.set(data));
     this.subUbicacionService.getAll().subscribe(data => this.subUbicaciones.set(data));
   }
 
-  /**
-   * Ajusta las validaciones de Origen/Destino según el tipo de movimiento
-   */
   private watchTipoMovimiento(): void {
     this.form.get('tipoMovimiento')?.valueChanges.subscribe((tipo: TipoMovimiento) => {
       const origen = this.form.get('subUbicacionOrigenId');
       const destino = this.form.get('subUbicacionDestinoId');
 
-      // Reset de campos
+      if (tipo !== 'ENTRADA') {
+        this.limpiarArchivo();
+      }
+
       origen?.clearValidators();
       destino?.clearValidators();
       origen?.setValue(null);
@@ -75,6 +91,36 @@ export class MovimientoInventario implements OnInit {
     });
   }
 
+  onArchivoChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      this.limpiarArchivo();
+      return;
+    }
+
+    const file = input.files[0];
+
+    if (file.size > this.maxFileSize) {
+      Swal.fire(
+        'Archivo demasiado grande',
+        'El documento no puede superar 10 MB.',
+        'error'
+      );
+      this.limpiarArchivo();
+      input.value = '';
+      return;
+    }
+
+    this.archivoSeleccionado.set(file);
+    this.nombreArchivo.set(file.name);
+  }
+
+  limpiarArchivo(): void {
+    this.archivoSeleccionado.set(null);
+    this.nombreArchivo.set('');
+  }
+
   getUserId(): number {
     const userJson = localStorage.getItem('auth_user');
     if (userJson) {
@@ -84,41 +130,76 @@ export class MovimientoInventario implements OnInit {
     return 0;
   }
 
-  guardar(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+  async guardar(): Promise<void> {
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+    return;
+  }
 
-    // Validación extra para traspasos
-    const val = this.form.value;
-    if (val.tipoMovimiento === 'TRASPASO' && val.subUbicacionOrigenId === val.subUbicacionDestinoId) {
-      Swal.fire('Error', 'El origen y destino no pueden ser iguales', 'error');
-      return;
-    }
+  const val = this.form.getRawValue();
 
-    this.loading.set(true);
-    const request: MovimientoInventarioRequest = {
-      ...val,
-      usuarioResponsableId: this.getUserId()
-    };
+  if (val.tipoMovimiento === 'TRASPASO' && val.subUbicacionOrigenId === val.subUbicacionDestinoId) {
+    Swal.fire('Error', 'El origen y destino no pueden ser iguales', 'error');
+    return;
+  }
 
-    this.movimientoService.create(request).subscribe({
-      next: (res) => {
+  this.loading.set(true);
+
+  const request: MovimientoInventarioRequest = {
+    ...val,
+    usuarioResponsableId: this.getUserId()
+  };
+
+  try {
+    const res = await firstValueFrom(this.movimientoService.create(request));
+    const movimientoId = res.id;
+
+    console.log(movimientoId);
+    if (this.esEntrada && this.archivoSeleccionado() && movimientoId) {
+      try {
+        await firstValueFrom(
+          this.documentoMovimientoService.subirDocumento(
+            movimientoId,
+            this.archivoSeleccionado() as File,
+            this.getUserId()
+          )
+        );
+
         Swal.fire({
           icon: 'success',
           title: 'Registrado',
-          text: res.mensaje,
+          text: res.mensaje ?? 'Movimiento registrado y documento cargado correctamente.',
           timer: 2000,
           showConfirmButton: false
         });
-        this.form.reset({ tipoMovimiento: 'ENTRADA' });
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        Swal.fire('Error', 'No se pudo registrar el movimiento', 'error');
+      } catch (error) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Movimiento registrado',
+          text: 'El movimiento se guardó, pero no se pudo cargar el documento.'
+        });
       }
-    });
+    } else {
+      Swal.fire({
+        icon: 'success',
+        title: 'Registrado',
+        text: res.mensaje ?? 'Movimiento registrado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    }
+
+    this.resetFormulario();
+  } catch (error) {
+    Swal.fire('Error', 'No se pudo registrar el movimiento', 'error');
+  } finally {
+    this.loading.set(false);
+  }
+}
+
+
+  resetFormulario(): void {
+    this.form.reset({ tipoMovimiento: 'ENTRADA' });
+    this.limpiarArchivo();
   }
 }

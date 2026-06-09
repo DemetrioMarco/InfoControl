@@ -1,184 +1,214 @@
-<!-- user-form.component.html -->
-@if (isOpen) {
-  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
+@if (isOpen()) {
+  <div class="modal-backdrop fade show" (click)="!isSubmitting() && closeModal()"></div>
 
-  <div class="modal fade show d-block" tabindex="-1">
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        
-        <!-- Header -->
-        <div class="modal-header border-bottom">
-          <h5 class="modal-title">{{ isEditMode ? 'Edit User' : 'Create New User' }}</h5>
-          <button 
-            type="button" 
-            class="btn-close" 
+      <div class="modal-content shadow-lg border-0">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold">
+            {{ isEditMode() ? 'Actualizar Usuario' : 'Nuevo Usuario' }}
+          </h5>
+
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Cerrar modal"
             (click)="closeModal()"
-            [disabled]="isSubmitting">
+            [disabled]="isSubmitting()">
           </button>
         </div>
 
-        <!-- Body -->
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
-          
-          <!-- Error Message -->
-          @if (errorMessage) {
-            <div class="alert alert-danger alert-dismissible fade show mb-3">
-              {{ errorMessage }}
-              <button type="button" class="btn-close" (click)="errorMessage = null"></button>
-            </div>
-          }
-
-          <!-- Nombre -->
-          <div class="mb-3">
-            <label for="nombre" class="form-label">Full Name *</label>
-            <input
-              type="text"
-              class="form-control"
-              id="nombre"
-              formControlName="nombre"
-              [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
-              placeholder="Enter full name">
-            <div class="invalid-feedback d-block" *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched">
-              Name is required (min. 3 characters)
-            </div>
-          </div>
-
-          <!-- Email -->
-          <div class="mb-3">
-            <label for="email" class="form-label">Email *</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              formControlName="email"
-              [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched"
-              placeholder="Enter email">
-            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['required'] && form.get('email')?.touched">
-              Email is required
-            </div>
-            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['email'] && form.get('email')?.touched">
-              Invalid email format
-            </div>
-            <div class="invalid-feedback d-block" *ngIf="form.get('email')?.errors?.['emailTaken'] && form.get('email')?.touched">
-              This email is already registered
-            </div>
-          </div>
-
-          <!-- Password -->
-          <div class="mb-3">
-            <label for="password" class="form-label">
-              Password {{ !isEditMode ? '*' : '(optional)' }}
-            </label>
-            <div class="input-group">
-              <input
-                [type]="showPassword ? 'text' : 'password'"
-                class="form-control"
-                id="password"
-                formControlName="password"
-                [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
-                [placeholder]="isEditMode ? 'Leave empty to keep current password' : 'Min. 8 characters, 1 uppercase, 1 number'">
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                (click)="togglePasswordVisibility()"
-                [disabled]="isSubmitting">
-                <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-              </button>
-            </div>
-            
-            <!-- Password Strength -->
-            @if (form.get('password')?.value) {
-              <div class="mt-2">
-                <small class="d-block mb-1">Strength:</small>
-                <div class="progress" style="height: 4px;">
-                  <div 
-                    class="progress-bar"
-                    [class]="'bg-' + getPasswordStrength()"
-                    [style.width]="getPasswordStrength() === 'weak' ? '33%' : getPasswordStrength() === 'medium' ? '66%' : '100%'">
-                  </div>
-                </div>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="modal-body p-4">
+            @if (errorMessage()) {
+              <div class="alert alert-danger d-flex align-items-center justify-content-between py-2">
+                <small>{{ errorMessage() }}</small>
+                <button
+                  type="button"
+                  class="btn-close"
+                  aria-label="Cerrar alerta"
+                  (click)="errorMessage.set(null)">
+                </button>
               </div>
             }
 
-            <div class="invalid-feedback d-block" *ngIf="form.get('password')?.errors?.['minlength'] && form.get('password')?.touched">
-              Password must be at least 8 characters
-            </div>
-            <div class="invalid-feedback d-block" *ngIf="form.get('password')?.errors?.['weakPassword'] && form.get('password')?.touched">
-              Password must contain 1 uppercase letter and 1 number
-            </div>
-          </div>
-
-          <!-- Confirm Password -->
-          @if (form.get('password')?.value) {
             <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirm Password *</label>
+              <label class="form-label small fw-semibold" for="nombre">
+                Nombre Completo *
+              </label>
+              <input
+                id="nombre"
+                type="text"
+                class="form-control"
+                formControlName="nombre"
+                [class.is-invalid]="isFieldInvalid('nombre')"
+                placeholder="Ej: Juan Pérez">
+
+              @if (isFieldInvalid('nombre')) {
+                <div class="invalid-feedback">Mínimo 3 caracteres.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="email">
+                Correo Electrónico *
+              </label>
+              <input
+                id="email"
+                type="email"
+                class="form-control"
+                formControlName="email"
+                [class.is-invalid]="isFieldInvalid('email')"
+                placeholder="usuario@dominio.com">
+
+              @if (form.controls.email.pending) {
+                <div class="form-text text-primary small">Verificando...</div>
+              }
+
+              @if (form.controls.email.errors?.['required'] && form.controls.email.touched) {
+                <div class="invalid-feedback d-block">El correo es obligatorio.</div>
+              }
+
+              @if (form.controls.email.errors?.['email'] && form.controls.email.touched) {
+                <div class="invalid-feedback d-block">Formato de correo inválido.</div>
+              }
+
+              @if (form.controls.email.errors?.['emailTaken'] && form.controls.email.touched) {
+                <div class="invalid-feedback d-block">Este email ya está registrado.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="password">
+                Contraseña {{ isEditMode() ? '(Opcional)' : '*' }}
+              </label>
+
               <div class="input-group">
                 <input
-                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  id="password"
+                  [type]="showPassword() ? 'text' : 'password'"
                   class="form-control"
-                  id="confirmPassword"
-                  formControlName="confirmPassword"
-                  [class.is-invalid]="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
-                  placeholder="Confirm password">
+                  formControlName="password"
+                  [class.is-invalid]="isFieldInvalid('password')"
+                  placeholder="••••••••">
+
                 <button
                   type="button"
                   class="btn btn-outline-secondary"
-                  (click)="toggleConfirmPasswordVisibility()"
-                  [disabled]="isSubmitting">
-                  <span class="material-icons">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+                  aria-label="Mostrar u ocultar contraseña"
+                  (click)="togglePasswordVisibility()">
+                  <span class="material-icons fs-6">
+                    {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                  </span>
                 </button>
               </div>
-              <div class="invalid-feedback d-block" *ngIf="form.errors?.['passwordMismatch'] && form.get('confirmPassword')?.touched">
-                Passwords do not match
+
+              @if (form.controls.password.value) {
+                <div class="progress mt-2" style="height: 4px;">
+                  <div
+                    class="progress-bar transition-all"
+                    [class.bg-danger]="getPasswordStrength() === 'weak'"
+                    [class.bg-warning]="getPasswordStrength() === 'medium'"
+                    [class.bg-success]="getPasswordStrength() === 'strong'"
+                    [style.width]="getPasswordStrength() === 'weak' ? '33%' : getPasswordStrength() === 'medium' ? '66%' : '100%'">
+                  </div>
+                </div>
+              }
+
+              @if (form.controls.password.errors?.['minlength'] && form.controls.password.touched) {
+                <small class="text-danger d-block mt-1">
+                  Debe tener al menos 8 caracteres.
+                </small>
+              }
+
+              @if (form.controls.password.errors?.['weakPassword'] && form.controls.password.touched) {
+                <small class="text-danger d-block mt-1">
+                  Debe incluir una mayúscula y un número.
+                </small>
+              }
+            </div>
+
+            @if (showConfirmPasswordField()) {
+              <div class="mb-3">
+                <label class="form-label small fw-semibold" for="confirmPassword">
+                  Confirmar Contraseña {{ !isEditMode() ? '*' : '' }}
+                </label>
+
+                <div class="input-group">
+                  <input
+                    id="confirmPassword"
+                    [type]="showConfirmPassword() ? 'text' : 'password'"
+                    class="form-control"
+                    formControlName="confirmPassword"
+                    [class.is-invalid]="form.errors?.['passwordMismatch'] && form.controls.confirmPassword.touched">
+
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    aria-label="Mostrar u ocultar confirmación de contraseña"
+                    (click)="toggleConfirmPasswordVisibility()">
+                    <span class="material-icons fs-6">
+                      {{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}
+                    </span>
+                  </button>
+                </div>
+
+                @if (form.errors?.['passwordMismatch'] && form.controls.confirmPassword.touched) {
+                  <div class="invalid-feedback d-block">Las contraseñas no coinciden.</div>
+                }
+              </div>
+            }
+
+            <div class="row g-3">
+              <div class="col-md-7">
+                <label class="form-label small fw-semibold" for="rol">
+                  Rol del Sistema
+                </label>
+                <select id="rol" class="form-select" formControlName="rol">
+                  @for (role of roles; track role) {
+                    <option [ngValue]="role">{{ role }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-md-5 d-flex align-items-end">
+                <div class="form-check mb-2">
+                  <input
+                    id="enabled"
+                    type="checkbox"
+                    class="form-check-input"
+                    formControlName="enabled">
+                  <label class="form-check-label small" for="enabled">
+                    Usuario Activo
+                  </label>
+                </div>
               </div>
             </div>
-          }
+          </div>
 
-          <!-- Role -->
-          <div class="mb-3">
-            <label for="rol" class="form-label">Role *</label>
-            <select
-              class="form-select"
-              id="rol"
-              formControlName="rol">
-              @for (role of roles; track role) {
-                <option [value]="role">{{ role }}</option>
+          <div class="modal-footer bg-light border-top-0 p-3">
+            <button
+              type="button"
+              class="btn btn-link text-decoration-none text-muted"
+              (click)="closeModal()"
+              [disabled]="isSubmitting()">
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary px-4 shadow-sm d-flex align-items-center gap-2"
+              [disabled]="form.invalid || form.pending || isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm"></span>
               }
-            </select>
-          </div>
 
-          <!-- Enabled -->
-          <div class="mb-0 form-check">
-            <input
-              type="checkbox"
-              class="form-check-input"
-              id="enabled"
-              formControlName="enabled">
-            <label class="form-check-label" for="enabled">
-              Enable user
-            </label>
+              <span>
+                {{ isSubmitting() ? 'Guardando...' : (isEditMode() ? 'Actualizar' : 'Crear Usuario') }}
+              </span>
+            </button>
           </div>
-
         </form>
-
-        <!-- Footer -->
-        <div class="modal-footer border-top">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            (click)="closeModal()"
-            [disabled]="isSubmitting">
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            (click)="onSubmit()"
-            [disabled]="form.invalid || isSubmitting">
-            {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update User' : 'Create User') }}
-          </button>
-        </div>
-
       </div>
     </div>
   </div>

@@ -1,136 +1,185 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import Swal from 'sweetalert2';
 import { UserService } from '../../core/services/user.service';
 import { UserResponse } from '../../core/models/user-model';
-import { CommonModule } from '@angular/common';
 import { Role } from '../../core/models/role.enum';
 import { UserForm } from './user-form';
-import { ConfirmModal } from '../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-users-list',
-  imports: [CommonModule, UserForm, ConfirmModal],
+  standalone: true,
+  imports: [CommonModule, UserForm],
   templateUrl: './users-list.html',
   styleUrl: './users-list.css',
 })
-export class UsersList implements OnInit{
-  
+export class UsersList implements OnInit {
   private readonly userService = inject(UserService);
-  
-  users = signal<UserResponse[]>([]);
-  isModalOpen = signal<boolean>(false);
-  editingUser = signal<UserResponse | null>(null);
-  loading = signal<boolean>(true);
-  error = signal<string | null>(null);
 
-  readonly pageSize = 10;
-  currentPage = signal(1);
-
-// 🔹 Fuente real (sin paginar)
-allUsers = signal<UserResponse[]>([]);
-
-// 🔹 Filtro (si existe)
-filteredUsers = computed(() => this.allUsers());
-
-// 🔹 Total correcto
-totalUsers = computed(() => this.filteredUsers().length);
-
-// 🔹 Total páginas
-totalPages = computed(() =>
-  Math.max(1, Math.ceil(this.totalUsers() / this.pageSize))
-);
-
-// 🔹 Datos paginados
-paginatedUsers = computed(() => {
-  const start = (this.currentPage() - 1) * this.pageSize;
-  return this.filteredUsers().slice(start, start + this.pageSize);
-});
-
-paginationItems = computed(() => {
-  const total = this.totalPages();
-  const current = this.currentPage();
-  const pages: (number | '...')[] = [];
-
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  pages.push(1);
-
-  if (current > 4) pages.push('...');
-
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
-
-  if (current < total - 3) pages.push('...');
-
-  pages.push(total);
-
-  return pages;
-});
-
-
-
-  // Confirm modal
-  confirmOpen    = signal<boolean>(false);
-  confirmTitle   = signal<string>('');
-  confirmMessage = signal<string>('');
-  confirmSubMessage = signal<string>('');
-  confirmLabel   = signal<string>('Confirmar');
-  confirmClass   = signal<string>('btn-danger');
-  private pendingAction: (() => void) | null = null;
-  
   readonly Role = Role;
+  readonly pageSize = 10;
 
-  
+  readonly allUsers = signal<UserResponse[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly currentPage = signal(1);
+
+  readonly searchInput = signal('');
+  readonly searchTerm = signal('');
+
+  readonly isModalOpen = signal(false);
+  readonly editingUser = signal<UserResponse | null>(null);
+
+  readonly actionLoading = signal(false);
+
+  constructor() {
+    effect((onCleanup) => {
+      const value = this.searchInput();
+
+      const handle = window.setTimeout(() => {
+        this.searchTerm.set(value);
+        this.currentPage.set(1);
+      }, 250);
+
+      onCleanup(() => window.clearTimeout(handle));
+    });
+
+    effect(() => {
+      const totalPages = this.totalPages();
+      const currentPage = this.currentPage();
+
+      if (currentPage > totalPages) {
+        this.currentPage.set(totalPages);
+        return;
+      }
+
+      if (currentPage < 1) {
+        this.currentPage.set(1);
+      }
+    });
+  }
+
+  readonly filteredUsers = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const users = this.allUsers();
+
+    if (!term) return users;
+
+    return users.filter((user) => {
+      const nombre = user.nombre?.toLowerCase() ?? '';
+      const email = user.email?.toLowerCase() ?? '';
+      const rol = user.rol?.toLowerCase() ?? '';
+      const id = String(user.id);
+
+      return (
+        nombre.includes(term) ||
+        email.includes(term) ||
+        rol.includes(term) ||
+        id.includes(term)
+      );
+    });
+  });
+
+  readonly totalUsers = computed(() => this.filteredUsers().length);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.totalUsers() / this.pageSize))
+  );
+
+  readonly safeCurrentPage = computed(() =>
+    Math.min(this.currentPage(), this.totalPages())
+  );
+
+  readonly paginatedUsers = computed(() => {
+    const start = (this.safeCurrentPage() - 1) * this.pageSize;
+    return this.filteredUsers().slice(start, start + this.pageSize);
+  });
+
+  readonly paginationItems = computed(() => {
+    const total = this.totalPages();
+    const current = this.safeCurrentPage();
+
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: Array<number | '...'> = [];
+    const addPage = (page: number | '...') => pages.push(page);
+
+    addPage(1);
+
+    if (current > 4) addPage('...');
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    for (let i = start; i <= end; i++) addPage(i);
+
+    if (current < total - 3) addPage('...');
+
+    addPage(total);
+
+    return pages;
+  });
+
   ngOnInit(): void {
     this.loadUsers();
   }
 
-  loadUsers():void {
+  loadUsers(): void {
     this.loading.set(true);
     this.error.set(null);
 
     this.userService.getAll().subscribe({
       next: (data) => {
-        this.allUsers.set(data); // ← era this.users.set(data)
+        this.allUsers.set(data);
         this.currentPage.set(1);
         this.loading.set(false);
       },
       error: () => {
         this.error.set('Error al cargar los usuarios');
         this.loading.set(false);
-      }
+      },
     });
+  }
+
+  onSearchChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchInput.set(value);
+  }
+
+  clearSearch(): void {
+    this.searchInput.set('');
+    this.searchTerm.set('');
+    this.currentPage.set(1);
   }
 
   goToPage(page: number | '...'): void {
     if (page === '...') return;
 
     const total = this.totalPages();
-
     if (page < 1 || page > total || page === this.currentPage()) return;
 
     this.currentPage.set(page);
   }
 
   prevPage(): void {
-    this.currentPage.update(p => Math.max(1, p - 1));
+    this.currentPage.update((p) => Math.max(1, p - 1));
   }
 
   nextPage(): void {
-    this.currentPage.update(p => Math.min(this.totalPages(), p + 1));
+    this.currentPage.update((p) => Math.min(this.totalPages(), p + 1));
   }
 
-   openModal(user?: UserResponse): void {
-    if (user) {
-      this.editingUser.set(user);
-    } else {
-      this.editingUser.set(null);
-    }
+  openModal(user?: UserResponse): void {
+    this.editingUser.set(user ?? null);
     this.isModalOpen.set(true);
   }
 
@@ -140,68 +189,102 @@ paginationItems = computed(() => {
   }
 
   onUserCreated(): void {
-    this.closeModal();
     this.loadUsers();
   }
 
-  private openConfirm(title: string, message: string, subMessage: string, label: string, cssClass: string, action: () => void): void {
-  this.confirmTitle.set(title);
-  this.confirmMessage.set(message);
-  this.confirmSubMessage.set(subMessage);
-  this.confirmLabel.set(label);
-  this.confirmClass.set(cssClass);
-  this.pendingAction = action;
-  this.confirmOpen.set(true);
-}
+  async toggleEnabled(user: UserResponse): Promise<void> {
+    if (this.actionLoading()) return;
 
-  onConfirmed(): void {
-    this.confirmOpen.set(false);
-    this.pendingAction?.();
-    this.pendingAction = null;
-  }
-
-  onCancelled(): void {
-    this.confirmOpen.set(false);
-    this.pendingAction = null;
-  }
-  
-  toggleEnabled(user: UserResponse): void {
     const action = user.enabled ? 'desactivar' : 'activar';
-    const btnClass = user.enabled ? 'btn-warning' : 'btn-success';
 
-    this.openConfirm(
-      'Cambiar estado',
-      `¿Estás seguro de ${action} al usuario ${user.nombre}?`,
-      '',
-      action.charAt(0).toUpperCase() + action.slice(1),
-      btnClass,
-      () => this.userService.toggleEnabled(user.id, !user.enabled).subscribe({
-        next: (updated) => this.allUsers.update(list => list.map(u => u.id === updated.id ? updated : u)),
-        error: () => this.error.set('Error al actualizar el estado del usuario')
-      })
-    );
+    const result = await Swal.fire({
+      title: 'Cambiar estado',
+      text: `¿Estás seguro de ${action} al usuario ${user.nombre}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: action.charAt(0).toUpperCase() + action.slice(1),
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: user.enabled ? '#f59e0b' : '#10b981',
+      cancelButtonColor: '#6c757d',
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.actionLoading.set(true);
+
+    this.userService.toggleEnabled(user.id, !user.enabled).subscribe({
+      next: (updatedUser) => {
+        this.allUsers.update((users) =>
+          users.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+        );
+
+        this.actionLoading.set(false);
+
+        Swal.fire({
+          title: 'Actualizado',
+          text: 'El estado del usuario fue actualizado correctamente.',
+          icon: 'success',
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      },
+      error: () => {
+        this.actionLoading.set(false);
+        this.error.set('Error al actualizar el estado del usuario');
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo actualizar el estado del usuario.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+        });
+      },
+    });
   }
 
-  deleteUser(id: number): void {
-    const user = this.allUsers().find(u => u.id === id);
+  async deleteUser(id: number): Promise<void> {
+    if (this.actionLoading()) return;
 
-    this.openConfirm(
-      'Eliminar usuario',
-      `¿Estás seguro de eliminar a ${user?.nombre ?? 'este usuario'}?`,
-      'Esta acción no se puede deshacer.', 
-      'Eliminar',
-      'btn-danger',
-      () => this.userService.delete(id).subscribe({
-        next: () => {
-      this.allUsers.update(list => list.filter(u => u.id !== id)); // ← era this.users
-      if (this.paginatedUsers().length === 0 && this.currentPage() > 1) {
-        this.currentPage.update(p => p - 1);
-      }
-    },
-        error: () => this.error.set('Error al eliminar el usuario')
-      })
-    );
+    const user = this.allUsers().find((u) => u.id === id);
+
+    const result = await Swal.fire({
+      title: 'Eliminar usuario',
+      html: `¿Estás seguro de eliminar a <strong>${user?.nombre ?? 'este usuario'}</strong>?<br><small>Esta acción no se puede deshacer.</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6c757d',
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.actionLoading.set(true);
+
+    this.userService.delete(id).subscribe({
+      next: () => {
+        this.actionLoading.set(false);
+        this.loadUsers();
+        Swal.fire({
+          title: 'Eliminado',
+          text: 'El usuario fue eliminado correctamente.',
+          icon: 'success',
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      },
+      error: () => {
+        this.actionLoading.set(false);
+        this.error.set('Error al eliminar el usuario');
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo eliminar el usuario.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+        });
+      },
+    });
   }
-
-
 }

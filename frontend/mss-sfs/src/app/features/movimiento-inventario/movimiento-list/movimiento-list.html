@@ -5,10 +5,10 @@
         <h5 class="mb-0 fw-bold text-dark">Historial de Movimientos</h5>
         <p class="text-muted small mb-0">Seguimiento detallado de entradas, salidas y transferencias</p>
       </div>
-      
+
       <div class="d-flex gap-2">
-        <select class="form-select form-select-sm w-auto" 
-                [(ngModel)]="tipoFiltro" 
+        <select class="form-select form-select-sm w-auto"
+                [(ngModel)]="tipoFiltro"
                 (ngModelChange)="cargarMovimientos()">
           <option value="TODOS">Todos los tipos</option>
           <option value="ENTRADA">Entradas</option>
@@ -29,7 +29,8 @@
               <th class="text-center">Cantidad</th>
               <th>Ruta (Origen → Destino)</th>
               <th>Referencia</th>
-              <th class="pe-4">Responsable</th>
+              <th>Responsable</th>
+              <th class="text-center pe-4">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -39,16 +40,20 @@
                   <div class="small fw-bold">{{ m.fechaMovimiento | date:'dd/MM/yyyy' }}</div>
                   <div class="smaller text-muted">{{ m.fechaMovimiento | date:'shortTime' }}</div>
                 </td>
+
                 <td>
                   <div class="fw-bold text-dark">{{ m.productoNombre }}</div>
                   <div class="smaller text-muted">ID: {{ m.productoId }}</div>
                 </td>
+
                 <td class="text-center">
                   <span class="badge border px-3 py-2" [ngClass]="getBadgeClass(m.tipoMovimiento)">
                     {{ m.tipoMovimiento }}
                   </span>
                 </td>
+
                 <td class="text-center fw-bold">{{ m.cantidad }}</td>
+
                 <td>
                   <div class="d-flex align-items-center gap-2 small">
                     <span [class.text-muted]="!m.subUbicacionOrigenNombre">
@@ -61,16 +66,26 @@
                   </div>
                   <div class="smaller text-muted italic">{{ m.motivo }}</div>
                 </td>
+
                 <td>
                   <span class="badge bg-light text-dark border font-monospace">{{ m.numeroReferencia }}</span>
                 </td>
-                <td class="pe-4">
+
+                <td>
                   <div class="small">{{ m.realizadoPorNombre }}</div>
+                </td>
+
+                <td class="text-center pe-4">
+                  <button class="btn btn-sm btn-outline-primary"
+                          type="button"
+                          (click)="abrirDetalle(m)">
+                    <i class="bi bi-eye"></i>
+                  </button>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="text-center py-5">
+                <td colspan="8" class="text-center py-5">
                   @if (loading()) {
                     <div class="spinner-border text-primary" role="status"></div>
                   } @else {
@@ -86,3 +101,112 @@
     </div>
   </div>
 </div>
+
+@if (modalVisible() && movimientoSeleccionado(); as m) {
+  <div class="modal-backdrop fade show"></div>
+
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title fw-bold mb-0">Detalle del Movimiento</h5>
+            <small class="text-muted">ID: {{ m.id }}</small>
+          </div>
+          <button type="button" class="btn-close" aria-label="Close" (click)="cerrarDetalle()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Fecha</label>
+              <div class="fw-semibold">{{ m.fechaMovimiento | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Producto</label>
+              <div class="fw-semibold">{{ m.productoNombre }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Tipo</label>
+              <div>
+                <span class="badge border px-3 py-2" [ngClass]="getBadgeClass(m.tipoMovimiento)">
+                  {{ m.tipoMovimiento }}
+                </span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Cantidad</label>
+              <div class="fw-semibold">{{ m.cantidad }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Referencia</label>
+              <div class="fw-semibold">{{ m.numeroReferencia }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-muted small mb-1">Responsable</label>
+              <div class="fw-semibold">{{ m.realizadoPorNombre }}</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted small mb-1">Ruta</label>
+              <div class="fw-semibold">
+                {{ m.subUbicacionOrigenNombre || '---' }}
+                <i class="bi bi-arrow-right mx-2 text-primary"></i>
+                {{ m.subUbicacionDestinoNombre || '---' }}
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted small mb-1">Motivo</label>
+              <div class="fw-semibold">{{ m.motivo }}</div>
+            </div>
+
+            @if (m.tipoMovimiento === 'ENTRADA') {
+              <div class="col-12 mt-2">
+                <div class="border rounded p-3 bg-light">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="fw-bold">Documento asociado</div>
+                  </div>
+
+                  @if (loadingDocumentos()) {
+                    <div class="py-3 text-center">
+                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                  } @else if (documentosMovimiento().length > 0) {
+                    <div class="d-grid gap-2">
+                      @for (doc of documentosMovimiento(); track doc.id) {
+                        <div class="d-flex justify-content-between align-items-center border rounded p-2 bg-white">
+                          <div>
+                            <div class="fw-semibold">{{ doc.nombreArchivo }}</div>
+                            <small class="text-muted">{{ doc.tipoDocumento }}</small>
+                          </div>
+                          <button class="btn btn-sm btn-primary"
+                                  type="button"
+                                  (click)="abrirDocumento(doc.rutaArchivo)">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>
+                            Ver documento
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted">Este movimiento no tiene documentos cargados.</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

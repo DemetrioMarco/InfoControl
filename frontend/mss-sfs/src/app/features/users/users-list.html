@@ -1,147 +1,173 @@
-<div class="container-fluid px-4 bg-light">
+<div class="users-page container-fluid py-4">
+  <div class="users-card card shadow-sm border-0">
+    <div class="users-toolbar card-header bg-white border-0 py-3 px-3 px-md-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <h3 class="mb-1">Usuarios</h3>
+          <p class="text-muted mb-0">Gestiona usuarios, roles y estado de acceso.</p>
+        </div>
 
-    <div class="card border-0 shadow-sm">
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
+          <div class="position-relative users-search">
+            <span class="material-icons users-icon position-absolute top-50 start-0 translate-middle-y ms-3">
+              search
+            </span>
+            <input
+              type="text"
+              class="form-control ps-5"
+              placeholder="Buscar usuario..."
+              [value]="searchInput()"
+              (input)="onSearchChange($event)"
+            />
+          </div>
 
-    <!-- Search + New User -->
-        <div class="card-body border-bottom d-flex justify-content-between align-items-center py-3">
-
-      <h1 class="fw-semibold m-0">User Management</h1>
-
-      <div class="d-flex align-items-center gap-3">
-        <div class="input-group" style="max-width: 280px;">
-          <span class="input-group-text bg-white border-end-0">
-            <span class="material-icons" style="font-size: 18px; color: #9ca3af;">search</span>
-          </span>
-        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search users...">
+          <button
+            type="button"
+            class="btn btn-primary d-inline-flex align-items-center gap-2"
+            (click)="openModal()"
+            [disabled]="actionLoading()">
+            <span class="material-icons users-icon-sm">add</span>
+            Nuevo usuario
+          </button>
+        </div>
       </div>
-      <button class="btn btn-success d-flex align-items-center gap-1 text-nowrap" (click)="openModal()">
-        <span class="material-icons" style="font-size: 18px;">add</span> New User
-      </button>
     </div>
-      </div>
 
-      
-
-    <!-- Loading -->
-    @if (loading()) {
-      <div class="text-center py-5 text-muted">
-        <div class="spinner-border spinner-border-sm me-2"></div>
-        Loading users...
-      </div>
-    }
-
-    <!-- Error -->
-    @else if (error()) {
-      <div class="alert alert-danger m-3">{{ error() }}</div>
-    }
-
-    @else {
-      <!-- Table -->
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 40px;"><input type="checkbox" class="form-check-input"></th>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (user of paginatedUsers(); track user.id) {
+    <div class="card-body p-0">
+      @if (loading()) {
+        <div class="text-center py-5 text-muted">
+          <div class="spinner-border spinner-border-sm me-2"></div>
+          Cargando usuarios...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-danger m-3 mb-0">
+          {{ error() }}
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 users-table">
+            <thead class="table-light">
               <tr>
-                <td><input type="checkbox" class="form-check-input"></td>
-                <td class="text-muted">{{ user.id }}</td>
-                <td class="fw-medium">{{ user.nombre }}</td>
-                <td class="text-muted">{{ user.email }}</td>
-                <td>
-                  <span class="role-badge" [ngClass]="'role-' + user.rol.toLowerCase()">
-                    {{ user.rol }}
-                  </span>
-                </td>
-                <td>
-                  <div
-                    class="toggle-switch"
-                    [class.active]="user.enabled"
-                    (click)="toggleEnabled(user)">
-                  </div>
-                </td>
-                <td class="text-center">
-                  <button class="btn btn-primary btn-sm me-1" title="Edit" (click)="openModal(user)">
-                    <span class="material-icons" style="font-size: 16px;">edit</span>
-                  </button>
-                  <button class="btn btn-danger btn-sm" title="Delete" (click)="deleteUser(user.id)">
-                    <span class="material-icons" style="font-size: 16px;">delete</span>
-                  </button>
-                </td>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th class="text-center">Actions</th>
               </tr>
-            } @empty {
-              <tr>
-                <td colspan="7" class="text-center text-muted py-4">No users found.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
 
-      <!-- Pagination -->
-<div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
-  <span class="text-muted" style="font-size: 14px;">
-  Showing {{ paginatedUsers().length }} of {{ totalUsers() }} users
-</span>
-  @if (totalPages() > 1) {
-    <nav>
-      <ul class="pagination pagination-sm mb-0">
+            <tbody>
+              @for (user of paginatedUsers(); track user.id) {
+                <tr>
+                  <td class="text-muted">{{ user.id }}</td>
+                  <td class="fw-medium">{{ user.nombre }}</td>
+                  <td class="text-muted">{{ user.email }}</td>
+                  <td>
+                    <span class="role-badge" [ngClass]="'role-' + user.rol.toLowerCase()">
+                      {{ user.rol }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="toggle-switch"
+                      [class.active]="user.enabled"
+                      [attr.aria-label]="user.enabled ? 'Deactivate user' : 'Activate user'"
+                      (click)="toggleEnabled(user)"
+                      [disabled]="actionLoading()">
+                    </button>
+                  </td>
+                  <td class="text-center">
+                    <div class="d-inline-flex gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        title="Edit"
+                        (click)="openModal(user)"
+                        [disabled]="actionLoading()">
+                        <span class="material-icons users-icon-sm">edit</span>
+                      </button>
 
-        <!-- Prev -->
-        <li class="page-item" [class.disabled]="currentPage() === 1">
-          <a class="page-link" (click)="prevPage()" style="cursor:pointer;">
-            <span class="material-icons" style="font-size: 14px; line-height: 1.5;">chevron_left</span>
-          </a>
-        </li>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        title="Delete"
+                        (click)="deleteUser(user.id)"
+                        [disabled]="actionLoading()">
+                        <span class="material-icons users-icon-sm">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-4">
+                    No users found.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
 
-        <!-- Números -->
-        @for (page of paginationItems(); track $index) {
-          <li class="page-item" [class.active]="page === currentPage()" [class.disabled]="page === '...'">
-            <a class="page-link" (click)="goToPage(page)" style="cursor:pointer;">{{ page }}</a>
-          </li>
+    @if (!loading() && !error()) {
+      <div class="card-footer bg-white d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 py-3 px-3 px-md-4">
+        <span class="text-muted small">
+          Showing {{ paginatedUsers().length }} of {{ totalUsers() }} users
+        </span>
+
+        @if (totalPages() > 1) {
+          <nav aria-label="Users pagination">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="safeCurrentPage() === 1">
+                <button
+                  type="button"
+                  class="page-link"
+                  (click)="prevPage()"
+                  [disabled]="safeCurrentPage() === 1"
+                  aria-label="Previous page">
+                  <span class="material-icons users-pagination-icon">chevron_left</span>
+                </button>
+              </li>
+
+              @for (page of paginationItems(); track $index) {
+                <li
+                  class="page-item"
+                  [class.active]="page === safeCurrentPage()"
+                  [class.disabled]="page === '...'">
+                  @if (page === '...') {
+                    <span class="page-link">...</span>
+                  } @else {
+                    <button type="button" class="page-link" (click)="goToPage(page)">
+                      {{ page }}
+                    </button>
+                  }
+                </li>
+              }
+
+              <li class="page-item" [class.disabled]="safeCurrentPage() === totalPages()">
+                <button
+                  type="button"
+                  class="page-link"
+                  (click)="nextPage()"
+                  [disabled]="safeCurrentPage() === totalPages()"
+                  aria-label="Next page">
+                  <span class="material-icons users-pagination-icon">chevron_right</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
         }
-
-        <!-- Next -->
-        <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-          <a class="page-link" (click)="nextPage()" style="cursor:pointer;">
-            <span class="material-icons" style="font-size: 14px; line-height: 1.5;">chevron_right</span>
-          </a>
-        </li>
-
-      </ul>
-    </nav>
-  }
-</div>
-
+      </div>
     }
-
   </div>
-
-  <!-- Modal Create/Edit -->
-  <app-user-form
-    [isOpen]="isModalOpen()"
-    [editingUser]="editingUser()"
-    (close)="closeModal()"
-    (userCreated)="onUserCreated()" />
-
-  <!-- Modal delete -->
-  <app-confirm-modal
-  [isOpen]="confirmOpen()"
-  [title]="confirmTitle()"
-  [message]="confirmMessage()"
-  [subMessage]="confirmSubMessage()"
-  [confirmLabel]="confirmLabel()"
-  [confirmClass]="confirmClass()"
-  (confirmed)="onConfirmed()"
-  (cancelled)="onCancelled()"/>
-
 </div>
+
+<app-user-form
+  [isOpen]="isModalOpen()"
+  [editingUser]="editingUser()"
+  (close)="closeModal()"
+  (userCreated)="onUserCreated()" />

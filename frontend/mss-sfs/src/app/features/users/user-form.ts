@@ -1,222 +1,341 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output, output } from '@angular/core';
-import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { UserService } from '../../core/services/user.service';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Output,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {
+  AbstractControl,
+  AsyncValidatorFn,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { catchError, map, of, take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Role } from '../../core/models/role.enum';
-import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { UserResponse } from '../../core/models/user-model';
+import { UserService } from '../../core/services/user.service';
+
+type UserFormControls = {
+  nombre: FormControl<string>;
+  email: FormControl<string>;
+  password: FormControl<string>;
+  confirmPassword: FormControl<string>;
+  rol: FormControl<Role>;
+  enabled: FormControl<boolean>;
+};
+
+type CreateUserPayload = {
+  nombre: string;
+  email: string;
+  password: string;
+  rol: Role;
+  enabled: boolean;
+};
+
+type UpdateUserPayload = {
+  nombre: string;
+  email: string;
+  rol: Role;
+  enabled: boolean;
+  password?: string;
+};
 
 @Component({
   selector: 'app-user-form',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })
-export class UserForm implements OnInit{
+export class UserForm {
+  readonly isOpen = input(false);
+  readonly editingUser = input<UserResponse | null>(null);
 
-  @Input() isOpen = false;
-  @Input() editingUser: UserResponse | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() userCreated = new EventEmitter<void>();
 
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  form!: FormGroup<{
-    nombre: FormControl<string>;
-    email: FormControl<string>;
-    password: FormControl<string>;
-    confirmPassword: FormControl<string>;
-    rol: FormControl<Role>;
-    enabled: FormControl<boolean>;
-  }>;
-  
-  roles = Object.values(Role);
-  showPassword = false;
-  showConfirmPassword = false;
-  isSubmitting = false;
-  errorMessage: string | null = null;
-  isEditMode = false;
+  readonly roles = Object.values(Role);
+  readonly isEditMode = computed(() => !!this.editingUser());
 
-  ngOnInit(): void {
+  readonly showPassword = signal(false);
+  readonly showConfirmPassword = signal(false);
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+
+  form!: FormGroup<UserFormControls>;
+
+  constructor() {
     this.initForm();
-  }
 
-  ngOnChanges(): void {
-    if (this.isOpen && this.editingUser) {
-      this.isEditMode = true;
-      this.populateForm();
-    } else {
-      this.isEditMode = false;
-      this.form?.reset({ rol: Role.OPERADOR, enabled: true });
-    }
-  }
+    this.form.controls.password.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((val) => {
+        if (this.isEditMode() && !this.hasText(val)) {
+          this.form.controls.confirmPassword.setValue('', { emitEvent: false });
+          this.form.controls.confirmPassword.markAsPristine();
+          this.form.controls.confirmPassword.markAsUntouched();
+          this.form.updateValueAndValidity({ emitEvent: false });
+        }
+      });
 
-  private initForm(): void {
-   const fb = this.fb.nonNullable;
+    effect(() => {
+      if (!this.form) return;
 
-    this.form = this.fb.nonNullable.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email], [this.emailUniqueValidator()]],
-      password: ['', [Validators.required, Validators.minLength(8), this.passwordValidator()]],
-      confirmPassword: ['', Validators.required],
-      rol: [Role.OPERADOR, Validators.required],
-      enabled: [true],
-    }, {
-      validators: this.passwordMatchValidator()
+      if (this.isOpen()) {
+        const editing = this.editingUser();
+        editing ? this.loadEditingUser(editing) : this.resetForCreate();
+      } else {
+        this.resetState();
+      }
     });
   }
 
-  private populateForm(): void {
-    if (this.editingUser) {
-      this.form.patchValue({
-        nombre: this.editingUser.nombre,
-        email: this.editingUser.email,
-        rol: this.editingUser.rol,
-        enabled: this.editingUser.enabled,
-      });
-      
-      this.form.get('password')?.clearAsyncValidators();
-      this.form.get('password')?.clearValidators();
-      this.form.get('password')?.setValidators([Validators.minLength(8), this.passwordValidator()]);
-      this.form.get('password')?.updateValueAndValidity();
-      
-      this.form.get('confirmPassword')?.clearValidators();
-      this.form.get('confirmPassword')?.updateValueAndValidity();
-    }
+  private initForm(): void {
+    this.form = this.fb.nonNullable.group<UserFormControls>(
+      {
+        nombre: this.fb.nonNullable.control('', [
+          Validators.required,
+          Validators.minLength(3),
+        ]),
+        email: this.fb.nonNullable.control('', {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: [this.emailUniqueValidator()],
+          updateOn: 'blur',
+        }),
+        password: this.fb.nonNullable.control(''),
+        confirmPassword: this.fb.nonNullable.control(''),
+        rol: this.fb.nonNullable.control(Role.OPERADOR, [Validators.required]),
+        enabled: this.fb.nonNullable.control(true),
+      },
+      {
+        validators: [this.passwordMatchValidator()],
+      }
+    );
   }
 
+  private setupModeValidators(): void {
+    const { password, confirmPassword } = this.form.controls;
+    const strength = this.passwordStrengthValidator();
 
-  private emailUniqueValidator() {
+    if (this.isEditMode()) {
+      password.setValidators([Validators.minLength(8), strength]);
+      confirmPassword.clearValidators();
+    } else {
+      password.setValidators([Validators.required, Validators.minLength(8), strength]);
+      confirmPassword.setValidators([Validators.required]);
+    }
+
+    password.updateValueAndValidity({ emitEvent: false });
+    confirmPassword.updateValueAndValidity({ emitEvent: false });
+    this.form.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private loadEditingUser(user: UserResponse): void {
+    this.setupModeValidators();
+
+    this.form.reset(
+      {
+        nombre: user.nombre,
+        email: user.email,
+        password: '',
+        confirmPassword: '',
+        rol: user.rol,
+        enabled: user.enabled,
+      },
+      { emitEvent: false }
+    );
+
+    this.clearUIState();
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+  }
+
+  private resetForCreate(): void {
+    this.setupModeValidators();
+
+    this.form.reset(
+      {
+        nombre: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        rol: Role.OPERADOR,
+        enabled: true,
+      },
+      { emitEvent: false }
+    );
+
+    this.clearUIState();
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+  }
+
+  private resetState(): void {
+    this.clearUIState();
+    this.form?.markAsPristine();
+    this.form?.markAsUntouched();
+  }
+
+  private clearUIState(): void {
+    this.errorMessage.set(null);
+    this.showPassword.set(false);
+    this.showConfirmPassword.set(false);
+    this.isSubmitting.set(false);
+    this.form?.setErrors(null);
+  }
+
+  private hasText(value: unknown): boolean {
+    return String(value ?? '').trim().length > 0;
+  }
+
+  private emailUniqueValidator(): AsyncValidatorFn {
     return (control: AbstractControl) => {
-      if (!control.value) return of(null);
-      
-      return control.valueChanges.pipe(
-        debounceTime(500),
-        distinctUntilChanged(),
-        switchMap(email => {
-          return this.userService.getAll().pipe(
-            map(users => {
-              const exists = users.some(user => user.email === email);
-              return exists ? { emailTaken: true } : null;
-            }),
-            catchError(() => of(null))
-          );
-        })
+      const email = String(control.value ?? '').trim().toLowerCase();
+      if (!email) return of(null);
+
+      const editing = this.editingUser();
+      const editingEmail = String(editing?.email ?? '').trim().toLowerCase();
+
+      if (this.isEditMode() && email === editingEmail) return of(null);
+
+      return this.userService.checkEmailExists(email, editing?.id).pipe(
+        map((exists) => (exists ? { emailTaken: true } : null)),
+        catchError(() => of(null)),
+        take(1)
       );
     };
   }
 
-  private passwordValidator() {
+  private passwordStrengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const value = control.value;
-      if (!value) return null;
+      const val = String(control.value ?? '');
+      if (!val) return null;
 
-      const hasUppercase = /[A-Z]/.test(value);
-      const hasNumber = /[0-9]/.test(value);
-
-      if (!hasUppercase || !hasNumber) {
-        return { weakPassword: true };
-      }
-      return null;
+      return /[A-Z]/.test(val) && /[0-9]/.test(val)
+        ? null
+        : { weakPassword: true };
     };
   }
 
-  private passwordMatchValidator() {
+  private passwordMatchValidator(): ValidatorFn {
     return (group: AbstractControl): ValidationErrors | null => {
-      const password = group.get('password')?.value;
-      const confirmPassword = group.get('confirmPassword')?.value;
+      const pass = String(group.get('password')?.value ?? '');
+      const conf = String(group.get('confirmPassword')?.value ?? '');
 
-      if (password && confirmPassword && password !== confirmPassword) {
-        group.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-        return { passwordMismatch: true };
-      }
-      return null;
+      if (this.isEditMode() && !pass) return null;
+      return (!pass && !conf) || pass === conf ? null : { passwordMismatch: true };
     };
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.form.pending || this.isSubmitting()) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
-    this.isSubmitting = true;
-    this.errorMessage = null;
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
-    const { confirmPassword, ...payload } = this.form.getRawValue();
+    const raw = this.form.getRawValue();
 
+    const basePayload = {
+      nombre: raw.nombre.trim(),
+      email: raw.email.trim(),
+      rol: raw.rol,
+      enabled: raw.enabled,
+    };
 
-    if (this.isEditMode && this.editingUser) {
-      this.updateUser(payload);
+    if (this.isEditMode()) {
+      const payload: UpdateUserPayload = {
+        ...basePayload,
+        ...(this.hasText(raw.password) ? { password: raw.password } : {}),
+      };
+
+      this.userService.update(this.editingUser()!.id, payload).subscribe({
+        next: () => {
+          this.userCreated.emit();
+          this.closeModal();
+        },
+        error: (err) => this.handleError(err, 'Error al actualizar'),
+      });
     } else {
-      this.createUser(payload);
+      const payload: CreateUserPayload = {
+        ...basePayload,
+        password: raw.password,
+      };
+
+      this.userService.create(payload).subscribe({
+        next: () => {
+          this.userCreated.emit();
+          this.closeModal();
+        },
+        error: (err) => this.handleError(err, 'Error al crear'),
+      });
     }
   }
 
-  private createUser(payload: any): void {
-    this.userService.create(payload).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.userCreated.emit();
-        this.closeModal();
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        
-        if (err.status === 409) {
-          this.form.get('email')?.setErrors({ emailTaken: true });
-          this.errorMessage = 'Este email ya está registrado';
-        } else {
-          this.errorMessage = err.error?.message || 'Error al crear el usuario';
-        }
-      }
-    });
-  }
+  private handleError(
+    err: { status?: number; error?: { message?: string } },
+    fallback: string
+  ): void {
+    this.isSubmitting.set(false);
 
-  private updateUser(payload: any): void {
-    if (!this.editingUser) return;
+    if (err.status === 409) {
+      const emailCtrl = this.form.controls.email;
+      emailCtrl.setErrors({
+        ...(emailCtrl.errors ?? {}),
+        emailTaken: true,
+      });
+      emailCtrl.markAsTouched();
+      this.errorMessage.set('El email ya está en uso');
+      return;
+    }
 
-    this.userService.update(this.editingUser.id, payload).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.userCreated.emit();
-        this.closeModal();
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        
-        if (err.status === 409) {
-          this.form.get('email')?.setErrors({ emailTaken: true });
-          this.errorMessage = 'Este email ya está registrado';
-        } else {
-          this.errorMessage = err.error?.message || 'Error al actualizar el usuario';
-        }
-      }
-    });
+    this.errorMessage.set(err.error?.message || fallback);
   }
 
   closeModal(): void {
-    this.form.reset({ rol: Role.OPERADOR, enabled: true });
-    this.errorMessage = null;
-    this.showPassword = false;
-    this.showConfirmPassword = false;
-    this.isEditMode = false;
+    this.resetState();
     this.close.emit();
   }
 
   togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.showPassword.update((v) => !v);
   }
 
   toggleConfirmPasswordVisibility(): void {
-    this.showConfirmPassword = !this.showConfirmPassword;
+    this.showConfirmPassword.update((v) => !v);
   }
 
-  getPasswordStrength(): string {
-    const password = this.form.get('password')?.value;
-    if (!password) return '';
-    if (password.length < 8) return 'weak';
-    if (/[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
-    return 'medium';
+  getPasswordStrength(): 'weak' | 'medium' | 'strong' | '' {
+    const p = String(this.form?.controls.password.value ?? '');
+    if (!p) return '';
+    if (p.length < 8) return 'weak';
+    return /[A-Z]/.test(p) && /[0-9]/.test(p) ? 'strong' : 'medium';
   }
 
+  isFieldInvalid(name: keyof UserFormControls): boolean {
+    const ctrl = this.form.controls[name];
+    return ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  }
 
+  showConfirmPasswordField(): boolean {
+    return !this.isEditMode() || this.hasText(this.form.controls.password.value);
+  }
 }

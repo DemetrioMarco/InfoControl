@@ -1,9 +1,13 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment/environment';
-import { UserResponse } from '../models/user-model';
-
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UpdateUserStatusDto,
+  UserResponse,
+} from '../models/user-model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -18,11 +22,11 @@ export class UserService {
     return this.http.get<UserResponse>(`${this.apiUrl}/${id}`);
   }
 
-  create(payload: Partial<UserResponse>): Observable<UserResponse> {
+  create(payload: CreateUserDto): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.apiUrl, payload);
   }
 
-  update(id: number, payload: Partial<UserResponse>): Observable<UserResponse> {
+  update(id: number, payload: UpdateUserDto): Observable<UserResponse> {
     return this.http.put<UserResponse>(`${this.apiUrl}/${id}`, payload);
   }
 
@@ -31,6 +35,17 @@ export class UserService {
   }
 
   toggleEnabled(id: number, enabled: boolean): Observable<UserResponse> {
-    return this.http.patch<UserResponse>(`${this.apiUrl}/${id}/status`, { enabled });
+    const payload: UpdateUserStatusDto = { enabled };
+    return this.http.patch<UserResponse>(`${this.apiUrl}/${id}/status`, payload);
+  }
+
+  checkEmailExists(email: string, excludeId?: number | null): Observable<boolean> {
+    let params = new HttpParams().set('email', email);
+
+    if (excludeId !== undefined && excludeId !== null) {
+      params = params.set('excludeId', String(excludeId));
+    }
+
+    return this.http.get<boolean>(`${this.apiUrl}/exists-email`, { params });
   }
 }

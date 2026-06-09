@@ -62,7 +62,7 @@ export interface MovimientoInventarioRequest {
   tipoMovimiento: TipoMovimiento;
   productoId: number;
   cantidad: number;
-  precioUnitario?: number;
+  precioUnitario?: number | null;
   subUbicacionOrigenId?: number | null;
   subUbicacionDestinoId?: number | null;
   motivo: string;
@@ -75,5 +75,8 @@ export interface MovimientoInventarioRequest {
  * Interfaz para la respuesta simple del servidor al insertar
  */
 export interface MovimientoResponse {
+  exitoso: boolean;
   mensaje: string;
+  id: number;
 }
+

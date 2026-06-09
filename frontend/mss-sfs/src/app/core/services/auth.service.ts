@@ -1,72 +1,78 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable, tap, throwError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthResponse, LoginRequest, User } from '../models/auth-response.model';
 import { environment } from '../../../environment/environment';
+import { AuthResponse, LoginRequest, User } from '../models/auth-response.model';
+
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AuthService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private apiUrl = `${environment.apiUrl}/auth`;
 
-  private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
-
-  private readonly apiUrl = environment.apiUrl;
-  private readonly ACCESS_TOKEN_KEY = 'accessToken';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
-  private readonly USER_KEY = 'auth_user';
-
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-  return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
-    tap((response) => {
-      console.log('AuthService.login - response received', response);
-     
-      this.setSession(response);
-      
-    }),
-    catchError((err) => {
-      console.error('AuthService.login - catchError:', err);
-      return throwError(() => err);
-    })
-  );
-}
-
-setSession(authResponse: AuthResponse): void {
-  try {
-    localStorage.setItem(this.ACCESS_TOKEN_KEY, authResponse.access_token);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, authResponse.refresh_token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(authResponse.user));
-    console.log('setSession: tokens saved');
-  } catch (err) {
-    console.error('setSession error:', err);
-    throw err;
-  }
-}
-
-  getAccessToken(): string | null {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+  getToken(): string | null {
+    return localStorage.getItem('access_token');
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return localStorage.getItem('refresh_token');
   }
 
   getUser(): User | null {
-    const user = localStorage.getItem(this.USER_KEY);
-    return user ? JSON.parse(user) : null;
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+
+    try {
+      return JSON.parse(userStr) as User;
+    } catch {
+      this.clearTokens();
+      return null;
+    }
   }
 
   isAuthenticated(): boolean {
-    const token = this.getAccessToken();
-    return !!token;
+    return !!this.getToken();
   }
 
-  logout(): void {
-    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    this.router.navigate(['/login']);
+  saveTokens(response: AuthResponse): void {
+    localStorage.setItem('access_token', response.access_token);
+    localStorage.setItem('refresh_token', response.refresh_token);
+
+    if (response.user) {
+      localStorage.setItem('user', JSON.stringify(response.user));
+    }
   }
+
+  login(credentials: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      tap((response) => this.saveTokens(response))
+    );
+  }
+
+  refreshAccessToken(): Observable<AuthResponse> {
+    const refresh_token = this.getRefreshToken();
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refresh_token }).pipe(
+      tap((response) => this.saveTokens(response))
+    );
+  }
+
+  clearTokens(): void {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+  }
+
+  logout(redirect: boolean = true): void {
+    this.clearTokens();
+
+    if (redirect && this.router.url !== '/login') {
+      this.router.navigate(['/login']);
+    }
+  }
+
 }

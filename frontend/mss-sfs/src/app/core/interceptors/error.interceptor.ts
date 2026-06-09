@@ -9,12 +9,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
 
-      // manejo global SOLO sesión
-      if (err.status === 401) {
+      if (err.status === 403) {
         authService.logout();
       }
 
-      // 🔥 IMPORTANTE: regresar el error ORIGINAL
       return throwError(() => err);
     })
   );

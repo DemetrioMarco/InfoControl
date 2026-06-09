@@ -1,9 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../core/services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, take } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -12,8 +12,7 @@ import { finalize } from 'rxjs';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login implements OnInit{
-
+export class Login implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -23,52 +22,64 @@ export class Login implements OnInit{
   errorMessage = '';
   accessDeniedMessage = '';
 
-  form = this.fb.group({
+  form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]]
+    password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
- 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       const error = params['error'];
-      if (error) {
-        this.accessDeniedMessage = error;
+
+      this.accessDeniedMessage = error || '';
+
+      if (!error && this.authService.isAuthenticated()) {
+        this.router.navigate(['/app/dashboard']);
       }
     });
   }
 
-  onSubmit(): void {
 
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    return;
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.errorMessage = '';
+    this.loading = true;
+    this.form.disable();
+
+    const { email, password } = this.form.getRawValue();
+
+    this.authService
+      .login({ email, password })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.form.enable();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.accessDeniedMessage = '';
+          this.router.navigate(['/app/dashboard']);
+        },
+        error: (err) => {
+          this.errorMessage =
+            err.error?.message ||
+            err.message ||
+            'Error al iniciar sesión';
+        },
+      });
   }
 
-  this.errorMessage = '';
-  this.form.disable();
+  get emailControl() {
+    return this.form.controls.email;
+  }
 
-  this.authService.login({
-    email: this.form.value.email!,
-    password: this.form.value.password!
-  })
-  .pipe(
-    finalize(() => {
-      this.form.enable(); // 🔥 reactivar form SIEMPRE
-    })
-  )
-  .subscribe({
-    next: () => {
-      this.accessDeniedMessage = '';
-      this.router.navigate(['/app/dashboard']);
-    },
-    error: (err) => {
-      this.errorMessage =
-        err.error?.message ||
-        err.message ||
-        'Error al iniciar sesión';
-    }
-  });
-}
-
+  get passwordControl() {
+    return this.form.controls.password;
+  }
 }
