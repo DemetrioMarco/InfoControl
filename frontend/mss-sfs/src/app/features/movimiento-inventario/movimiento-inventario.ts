@@ -8,12 +8,11 @@ import { MovimientoInventarioService } from '../../core/services/movimiento-inve
 import { ProductoService } from '../../core/services/producto.service';
 import { SubUbicacionService } from '../../core/services/sububicacion.service';
 import { DocumentoMovimientoService } from '../../core/services/documento-movimiento.service';
+import { CorrelativoMovimientoService } from '../../core/services/correlativo-movimiento.service';
 
-import {
-  MovimientoInventarioRequest,
-  TipoMovimiento,
-  MovimientoResponse
-} from '../../core/models/movimiento-inventario.model';
+import { MovimientoInventarioRequest, TipoMovimiento } from '../../core/models/movimiento-inventario.model';
+
+import { TipoMovimientoCorrelativo } from '../../core/models/correlativo-movimiento.model';
 
 @Component({
   selector: 'app-movimiento-inventario',
@@ -28,6 +27,7 @@ export class MovimientoInventario implements OnInit {
   private productoService = inject(ProductoService);
   private subUbicacionService = inject(SubUbicacionService);
   private documentoMovimientoService = inject(DocumentoMovimientoService);
+  private correlativoMovimientoService = inject(CorrelativoMovimientoService);
 
   productos = signal<any[]>([]);
   subUbicaciones = signal<any[]>([]);
@@ -52,6 +52,7 @@ export class MovimientoInventario implements OnInit {
   ngOnInit(): void {
     this.cargarCatalogos();
     this.watchTipoMovimiento();
+    this.cargarPreviewCorrelativo(this.form.get('tipoMovimiento')?.value);
   }
 
   get esEntrada(): boolean {
@@ -88,7 +89,49 @@ export class MovimientoInventario implements OnInit {
 
       origen?.updateValueAndValidity();
       destino?.updateValueAndValidity();
+
+      this.cargarPreviewCorrelativo(tipo);
     });
+  }
+
+  private cargarPreviewCorrelativo(tipo: TipoMovimiento): void {
+    if (!this.esTipoMovimientoCorrelativo(tipo)) {
+      this.form.patchValue(
+        { numeroReferencia: '' },
+        { emitEvent: false }
+      );
+      return;
+    }
+
+    this.form.patchValue(
+      { numeroReferencia: '' },
+      { emitEvent: false }
+    );
+
+    this.correlativoMovimientoService.preview(tipo).subscribe({
+      next: (response) => {
+        this.form.patchValue(
+          { numeroReferencia: response.codigoSiguiente },
+          { emitEvent: false }
+        );
+      },
+      error: () => {
+        this.form.patchValue(
+          { numeroReferencia: '' },
+          { emitEvent: false }
+        );
+
+        Swal.fire(
+          'Error',
+          'No se pudo obtener el correlativo del movimiento.',
+          'error'
+        );
+      }
+    });
+  }
+
+  private esTipoMovimientoCorrelativo(tipo: TipoMovimiento): tipo is TipoMovimientoCorrelativo {
+    return tipo === 'ENTRADA' || tipo === 'SALIDA' || tipo === 'TRASPASO' || tipo === 'AJUSTE';
   }
 
   onArchivoChange(event: Event): void {
@@ -131,75 +174,74 @@ export class MovimientoInventario implements OnInit {
   }
 
   async guardar(): Promise<void> {
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    return;
-  }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
-  const val = this.form.getRawValue();
+    const val = this.form.getRawValue();
 
-  if (val.tipoMovimiento === 'TRASPASO' && val.subUbicacionOrigenId === val.subUbicacionDestinoId) {
-    Swal.fire('Error', 'El origen y destino no pueden ser iguales', 'error');
-    return;
-  }
+    if (val.tipoMovimiento === 'TRASPASO' && val.subUbicacionOrigenId === val.subUbicacionDestinoId) {
+      Swal.fire('Error', 'El origen y destino no pueden ser iguales', 'error');
+      return;
+    }
 
-  this.loading.set(true);
+    this.loading.set(true);
 
-  const request: MovimientoInventarioRequest = {
-    ...val,
-    usuarioResponsableId: this.getUserId()
-  };
+    const request: MovimientoInventarioRequest = {
+      ...val,
+      usuarioResponsableId: this.getUserId()
+    };
 
-  try {
-    const res = await firstValueFrom(this.movimientoService.create(request));
-    const movimientoId = res.id;
+    try {
+      const res = await firstValueFrom(this.movimientoService.create(request));
+      const movimientoId = res.id;
 
-    console.log(movimientoId);
-    if (this.esEntrada && this.archivoSeleccionado() && movimientoId) {
-      try {
-        await firstValueFrom(
-          this.documentoMovimientoService.subirDocumento(
-            movimientoId,
-            this.archivoSeleccionado() as File,
-            this.getUserId()
-          )
-        );
+      if (this.esEntrada && this.archivoSeleccionado() && movimientoId) {
+        try {
+          await firstValueFrom(
+            this.documentoMovimientoService.subirDocumento(
+              movimientoId,
+              this.archivoSeleccionado() as File,
+              this.getUserId()
+            )
+          );
 
+          Swal.fire({
+            icon: 'success',
+            title: 'Registrado',
+            text: res.mensaje ?? 'Movimiento registrado y documento cargado correctamente.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } catch (error) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Movimiento registrado',
+            text: 'El movimiento se guardó, pero no se pudo cargar el documento.'
+          });
+        }
+      } else {
         Swal.fire({
           icon: 'success',
           title: 'Registrado',
-          text: res.mensaje ?? 'Movimiento registrado y documento cargado correctamente.',
+          text: res.mensaje ?? 'Movimiento registrado correctamente.',
           timer: 2000,
           showConfirmButton: false
         });
-      } catch (error) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Movimiento registrado',
-          text: 'El movimiento se guardó, pero no se pudo cargar el documento.'
-        });
       }
-    } else {
-      Swal.fire({
-        icon: 'success',
-        title: 'Registrado',
-        text: res.mensaje ?? 'Movimiento registrado correctamente.',
-        timer: 2000,
-        showConfirmButton: false
-      });
+
+      this.resetFormulario();
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo registrar el movimiento', 'error');
+    } finally {
+      this.loading.set(false);
     }
-
-    this.resetFormulario();
-  } catch (error) {
-    Swal.fire('Error', 'No se pudo registrar el movimiento', 'error');
-  } finally {
-    this.loading.set(false);
   }
-}
-
 
   resetFormulario(): void {
     this.form.reset({ tipoMovimiento: 'ENTRADA' });
     this.limpiarArchivo();
+    this.cargarPreviewCorrelativo('ENTRADA');
   }
 }
