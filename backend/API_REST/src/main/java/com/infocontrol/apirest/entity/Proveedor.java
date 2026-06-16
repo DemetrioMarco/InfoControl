@@ -49,6 +49,10 @@ public class Proveedor {
     @Column(length = 150)
     private String contactoNombre;
 
+    @Size(max = 150, message = "El apellido del contacto no debe exceder 150 caracteres")
+    @Column(length = 150)
+    private String contactoApellido;
+
     @Size(max = 30, message = "El teléfono no debe exceder 30 caracteres")
     @Column(length = 30)
     private String contactoTelefono;

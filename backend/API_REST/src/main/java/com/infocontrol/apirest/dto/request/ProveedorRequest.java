@@ -18,6 +18,8 @@ public class ProveedorRequest {
         private String giro;
         @Size(max = 150, message = "El nombre de contacto no debe exceder 150 caracteres")
         private String contactoNombre;
+        @Size(max = 150, message = "El apellido del contacto no debe exceder 150 caracteres")
+        private String contactoApellido;
         @Size(max = 30, message = "El teléfono no debe exceder 30 caracteres")
         private String contactoTelefono;
         @Email(message = "El email debe ser válido")
@@ -47,6 +49,8 @@ public class ProveedorRequest {
         private String giro;
         @Size(max = 150, message = "El nombre de contacto no debe exceder 150 caracteres")
         private String contactoNombre;
+        @Size(max = 150, message = "El apellido de contacto no debe exceder 150 caracteres")
+        private String contactoApellido;
         @Size(max = 30, message = "El teléfono no debe exceder 30 caracteres")
         private String contactoTelefono;
         @Email(message = "El email debe ser válido")

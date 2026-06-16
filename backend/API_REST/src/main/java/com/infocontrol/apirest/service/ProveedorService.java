@@ -63,6 +63,7 @@ public class ProveedorService {
                 .nombreFantasia(request.getNombreFantasia())
                 .giro(request.getGiro())
                 .contactoNombre(request.getContactoNombre())
+                .contactoApellido(request.getContactoApellido())
                 .contactoTelefono(request.getContactoTelefono())
                 .contactoEmail(request.getContactoEmail())
                 .direccion(request.getDireccion())
@@ -91,6 +92,7 @@ public class ProveedorService {
         proveedor.setNombreFantasia(request.getNombreFantasia());
         proveedor.setGiro(request.getGiro());
         proveedor.setContactoNombre(request.getContactoNombre());
+        proveedor.setContactoApellido(request.getContactoApellido());
         proveedor.setContactoTelefono(request.getContactoTelefono());
         proveedor.setContactoEmail(request.getContactoEmail());
         proveedor.setDireccion(request.getDireccion());
@@ -122,7 +124,7 @@ public class ProveedorService {
     private void validateUniqueRut(String rut, Long id) {
         Optional<Proveedor> existing = proveedorRepository.findByRutIgnoreCase(rut);
         if (existing.isPresent() && (id == null || !existing.get().getId().equals(id))) {
-            throw new ResourceNotFoundException("Ya existe un proveedor con el RUT: " + rut);
+            throw new ResourceNotFoundException("Ya existe un proveedor con el RFC/RUT: " + rut);
         }
     }
 
@@ -141,6 +143,7 @@ public class ProveedorService {
                 .nombreFantasia(proveedor.getNombreFantasia())
                 .giro(proveedor.getGiro())
                 .contactoNombre(proveedor.getContactoNombre())
+                .contactoApellido(proveedor.getContactoApellido())
                 .contactoTelefono(proveedor.getContactoTelefono())
                 .contactoEmail(proveedor.getContactoEmail())
                 .direccion(proveedor.getDireccion())

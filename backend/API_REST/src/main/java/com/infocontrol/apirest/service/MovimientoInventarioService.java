@@ -24,6 +24,8 @@ public class MovimientoInventarioService {
 
     @Transactional
     public MovimientoResponse registrarMovimiento(MovimientoInventarioRequest request) {
+        log.info("usuarioResponsableID={}",request.getUsuarioResponsableId());
+        log.info("Request={}", request);
         List<Map<String, Object>> resultado = movimientoInventarioRepository.registrarMovimiento(
                 request.getProductoId(),
                 request.getTipoMovimiento(),

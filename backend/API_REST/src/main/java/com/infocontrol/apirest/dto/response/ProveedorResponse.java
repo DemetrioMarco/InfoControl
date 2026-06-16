@@ -11,6 +11,7 @@ public class ProveedorResponse {
     private String nombreFantasia;
     private String giro;
     private String contactoNombre;
+    private String contactoApellido;
     private String contactoTelefono;
     private String contactoEmail;
     private String direccion;
