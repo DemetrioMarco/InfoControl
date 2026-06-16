@@ -1,14 +1,14 @@
-
 <div class="container-fluid py-4">
+  <!-- Cabecera -->
   <div class="row mb-4 align-items-center">
     <div class="col-md-6">
-      <h4 class="fw-bold mb-0">Stock por Producto</h4>
-      <p class="text-muted small">Consulta la ubicación y disponibilidad de cada artículo</p>
+      <h4 class="fw-bold mb-0 text-dark">Stock por Producto</h4>
+      <p class="text-muted small mb-0">Consulta la ubicación y disponibilidad de cada artículo</p>
     </div>
     <div class="col-md-6">
-      <div class="input-group shadow-sm">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-        <input type="text" class="form-control border-start-0 ps-0" 
+      <div class="input-group shadow-sm border rounded-3 overflow-hidden">
+        <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" class="form-control border-0 ps-0 py-2" 
                placeholder="Buscar producto por nombre o código..."
                [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
       </div>
@@ -18,47 +18,74 @@
   <div class="row g-4">
     @for (product of productsSummary(); track product.id) {
       <div class="col-12">
-        <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card border-0 shadow-sm overflow-hidden card-product">
           <div class="card-body p-0">
             <div class="row g-0">
-              <!-- Info Básica del Producto -->
-              <div class="col-md-4 bg-light p-4 border-end">
-                <div class="mb-2 text-primary font-monospace small fw-bold">{{ product.codigo }}</div>
-                <h5 class="fw-bold mb-3">{{ product.nombre }}</h5>
+              <!-- Info del Producto -->
+              <div class="col-md-3 bg-light p-4 border-end">
+                <span class="badge bg-white text-primary border mb-2 font-monospace">{{ product.codigo }}</span>
+                <h5 class="fw-bold text-dark mb-4">{{ product.nombre }}</h5>
                 
-                <div class="p-3 bg-white rounded-3 border">
-                  <div class="smaller text-muted text-uppercase fw-bold">Stock Total en Red</div>
-                  <div class="h2 mb-0 fw-bold text-dark">{{ product.stockCalculado }}</div>
+                <div class="p-3 bg-white rounded-3 border shadow-sm">
+                  <div class="smaller text-muted text-uppercase fw-bold mb-1">Stock Total</div>
+                  <div class="h2 mb-0 fw-bold text-primary">{{ product.stockCalculado }}</div>
                 </div>
               </div>
 
-              <!-- Desglose de Ubicaciones -->
-              <div class="col-md-8 p-4">
-                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Distribución por Ubicación</h6>
+              <!-- Tabla de Distribución y Series -->
+              <div class="col-md-9 p-4">
+                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Desglose de Inventario y Series</h6>
                 <div class="table-responsive">
                   <table class="table table-sm align-middle">
                     <thead>
                       <tr class="text-muted smaller">
-                        <th>UBICACIÓN</th>
-                        <th>SUB-UBICACIÓN</th>
-                        <th class="text-end">CANTIDAD</th>
-                        <th class="text-end" style="width: 100px;">%</th>
+                        <th class="border-0">UBICACIÓN</th>
+                        <th class="border-0">SUB-UBICACIÓN</th>
+                        <th class="border-0 text-end">CANTIDAD</th>
+                        <th class="border-0" style="width: 40px;"></th>
                       </tr>
                     </thead>
-                    <tbody>
-                      @for (dist of product.distribucion; track dist.subUbicacion) {
-                        <tr>
-                          <td class="small fw-semibold">{{ dist.ubicacion }}</td>
-                          <td class="small text-muted">{{ dist.subUbicacion }}</td>
-                          <td class="text-end fw-bold">{{ dist.cantidad }}</td>
+                    <tbody class="border-top-0">
+                      @for (dist of product.distribucion; track dist.subUbicacionId) {
+                        @let key = getCacheKey(product.id, dist.subUbicacionId);
+                        
+                        <tr (click)="dist.cantidad > 0 && toggleSeries(product.id, dist.subUbicacionId)"
+                            [class.cursor-pointer]="dist.cantidad > 0"
+                            [class.bg-selected]="expandedKey() === key">
+                          <td class="small fw-semibold py-2">{{ dist.ubicacion }}</td>
+                          <td class="small text-muted py-2">{{ dist.subUbicacion }}</td>
+                          <td class="text-end fw-bold py-2">
+                            <span class="me-3">{{ dist.cantidad }}</span>
+                          </td>
                           <td class="text-end">
-                            <div class="progress" style="height: 6px;">
-                              <div class="progress-bar" role="progressbar" 
-                                   [style.width]="(dist.cantidad / product.stockCalculado * 100) + '%'">
-                              </div>
-                            </div>
+                            @if (dist.cantidad > 0) {
+                              <i class="bi" [class.bi-chevron-down]="expandedKey() !== key" [class.bi-chevron-up]="expandedKey() === key"></i>
+                            }
                           </td>
                         </tr>
+
+                        <!-- Sub-fila de Series -->
+                        @if (expandedKey() === key) {
+                          <tr>
+                            <td colspan="4" class="p-0 border-0">
+                              <div class="series-container bg-white p-3 border-start border-primary border-4 ms-2 my-1 shadow-sm">
+                                <div class="d-flex flex-wrap gap-2">
+                                  @if (seriesCache()[key]?.loading) {
+                                    <div class="small text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</div>
+                                  } @else {
+                                    @for (s of seriesCache()[key]?.data; track s.id) {
+                                      <span class="badge bg-light text-dark border fw-normal">
+                                        <i class="bi bi-qr-code me-1 text-primary"></i>{{ s.serie }}
+                                      </span>
+                                    } @empty {
+                                      <span class="small text-muted italic">Sin series registradas</span>
+                                    }
+                                  }
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        }
                       }
                     </tbody>
                   </table>
@@ -67,6 +94,10 @@
             </div>
           </div>
         </div>
+      </div>
+    } @empty {
+      <div class="col-12 text-center py-5">
+        <h5 class="text-muted">No se encontraron productos</h5>
       </div>
     }
   </div>

@@ -1,34 +1,68 @@
-.table thead th {
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
+.icon-box {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #adb5bd;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  font-weight: 700;
   color: #6c757d;
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
-.smaller {
-  font-size: 0.7rem;
+/* Caja de observaciones estilo "nota" */
+.observation-box {
+  background: #fff9e6;
+  border-left: 4px solid #ffc107;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #5c4d2d;
+  border-radius: 4px 8px 8px 4px;
+  min-height: 60px;
 }
 
-.badge {
-  font-weight: 600;
+/* Grid de series */
+.series-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
-.table-hover tbody tr:hover {
-  background-color: rgba(0, 123, 255, 0.02);
+.serie-tag {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  color: #212529;
+  text-align: center;
 }
 
-.font-monospace {
-  font-family: 'Courier New', Courier, monospace;
+.btn-white {
+  background: white;
+  transition: all 0.2s;
 }
 
-.modal {
-  background-color: rgba(0, 0, 0, 0.35);
+.btn-white:hover {
+  background: #f8f9fa;
+  border-color: #0d6efd;
 }
 
-.modal-backdrop {
-  z-index: 1040;
-}
-
-.modal {
-  z-index: 1050;
-}
+.italic { font-style: italic; }

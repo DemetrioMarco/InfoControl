@@ -16,7 +16,7 @@ export class CorrelativoMovimientoService {
   }
 
   siguiente(tipoMovimiento: TipoMovimientoCorrelativo): Observable<CorrelativoMovimientoPreviewResponse> {
-    return this.http.post<CorrelativoMovimientoPreviewResponse>(
+    return this.http.get<CorrelativoMovimientoPreviewResponse>(
       `${this.apiUrl}/siguiente/${tipoMovimiento}`,
       {}
     );

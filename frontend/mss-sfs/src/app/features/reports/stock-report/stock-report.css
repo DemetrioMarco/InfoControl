@@ -1,83 +1,12 @@
-/* Tarjetas y Contenedores */
-.card {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-}
-
-/* Tipografía */
-.smaller {
-  font-size: 0.68rem;
-}
-
-.font-monospace {
-  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.75rem;
-}
-
-/* Tablas Internas */
-.table thead th {
-  font-size: 0.65rem;
-  letter-spacing: 0.05rem;
-  text-transform: uppercase;
-  background-color: #f8f9fa;
-  z-index: 10;
-}
-
-.table tbody td {
-  border-bottom: 1px solid #f2f2f2;
-}
-
-.table-responsive::-webkit-scrollbar {
-  width: 4px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: #e0e0e0;
-  border-radius: 10px;
-}
-
-/* Badges y Botones */
-.badge {
-  font-size: 0.65rem;
-  padding: 0.35em 0.65em;
-  font-weight: 700;
-}
-
-.btn-xs {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
-  background-color: white;
-  border: none;
-}
-
-.btn-xs:hover {
-  background-color: #f8f9fa;
-}
-
-.btn-white {
-  background-color: white;
-  color: #6c757d;
-}
-
-/* Sticky header para la tabla dentro de la card */
-.sticky-top {
-  position: sticky;
-  top: 0;
-  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.05);
-}
-
-/* Ajustes de espaciado */
-.card-header {
-  border-bottom: 1px solid rgba(0,0,0,0.03) !important;
-}
-
-.input-group:focus-within {
-  border-color: #0d6efd !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
-}
+.card { transition: all 0.2s ease; border-radius: 12px; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important; }
+.smaller { font-size: 0.7rem; }
+.font-monospace { font-size: 0.75rem; }
+.cursor-pointer { cursor: pointer; }
+.bg-selected { background-color: #f0f7ff !important; }
+.bg-light-subtle { background-color: #fafbfc; }
+.border-primary { border-color: #0d6efd !important; }
+.sticky-top { position: sticky; top: 0; z-index: 5; background: white; }
+.btn-xs { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+.table-responsive::-webkit-scrollbar { width: 4px; }
+.table-responsive::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
