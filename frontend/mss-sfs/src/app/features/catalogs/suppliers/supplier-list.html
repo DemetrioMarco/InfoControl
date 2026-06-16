@@ -12,7 +12,7 @@
           <i class="bi bi-search text-muted"></i>
         </span>
         <input type="text" class="form-control border-start-0 ps-0 form-control-sm"
-          placeholder="Buscar por RUT o Razón Social..." [ngModel]="searchTerm()"
+          placeholder="Buscar por RFC o Razón Social..." [ngModel]="searchTerm()"
           (ngModelChange)="searchTerm.set($event)">
       </div>
       <button class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3" (click)="openModal()">
@@ -26,7 +26,7 @@
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light text-uppercase x-small fw-bold">
         <tr>
-          <th class="ps-4">RUT / Razón Social</th>
+          <th class="ps-4">RFC / Razón Social</th>
           <th>Giro</th>
           <th>Contacto</th>
           <th>Ubicación</th>
@@ -44,7 +44,7 @@
           <td>{{ item.giro || '---' }}</td>
           <td>
             <div class="d-flex flex-column">
-              <span class="fw-medium">{{ item.contactoNombre || 'N/A' }}</span>
+              <span class="fw-medium">{{ item.contactoNombre || 'N/A' }} {{ item.contactoApellido }}</span>
               <span class="text-muted x-small">{{ item.contactoEmail }}</span>
             </div>
           </td>

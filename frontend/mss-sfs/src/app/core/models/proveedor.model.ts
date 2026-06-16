@@ -5,6 +5,7 @@ export interface Proveedor {
   nombreFantasia: string;
   giro: string;
   contactoNombre: string;
+  contactoApellido: string;
   contactoTelefono: string;
   contactoEmail: string;
   direccion: string;
@@ -23,6 +24,7 @@ export interface ProveedorCreate {
   nombreFantasia?: string;
   giro?: string;
   contactoNombre?: string;
+  contactoApellido?: string;
   contactoTelefono?: string;
   contactoEmail?: string;
   direccion?: string;

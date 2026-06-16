@@ -43,6 +43,7 @@ export class SupplierForm implements OnInit, OnChanges {
       nombreFantasia: [''],
       giro: [''],
       contactoNombre: [''],
+      contactoApellido: [''],
       contactoTelefono: [''],
       contactoEmail: ['', [Validators.email]],
       direccion: [''],
